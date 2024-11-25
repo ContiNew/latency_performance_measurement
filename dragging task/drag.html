@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>실험 페이지</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="overlay">
+    <div class="message">실험을 시작합니다</div>
+    <button id="startButton">시작</button>
+</div>
+
+<div id="resultMessage" class="result-message"></div> <!-- 성공/실패 메시지 표시용 -->
+
+<div class="container">
+    <div id="centerBox" draggable="true"></div>
+    <div id="topLeft" class="cornerBox"></div>
+    <div id="topRight" class="cornerBox"></div>
+    <div id="bottomLeft" class="cornerBox"></div>
+    <div id="bottomRight" class="cornerBox"></div>
+
+    <!-- 각 모서리와 중앙의 중간 지점에 위치한 빨간색 상자들 -->
+    <div id="topLeftCenter" class="cornerBox"></div>
+    <div id="topRightCenter" class="cornerBox"></div>
+    <div id="bottomLeftCenter" class="cornerBox"></div>
+    <div id="bottomRightCenter" class="cornerBox"></div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>

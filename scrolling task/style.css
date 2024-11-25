@@ -1,0 +1,34 @@
+  /* 기본 스타일 */
+  body, html {
+    margin: 0;
+    padding: 0;
+    font-family: Arial, sans-serif;
+    scroll-behavior: smooth;
+    overflow-y: scroll;
+    height: 100%;
+    background-size: cover;  /* 이미지를 화면에 맞게 조정 */
+    background-position: center;
+    background-repeat: no-repeat;
+    background-color: #ffffff; /* 이미지가 보이지 않는 부분을 흰색으로 */
+}
+
+.section {
+    width: 80%;  /* 크기 조정 */
+    height: 80vh; /* 각 DIV 높이를 줄임 */
+    margin: 20px auto; /* 중앙 정렬 및 여백 */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    color: white;
+    text-align: center;
+    border-radius: 10px; /* 모서리를 둥글게 */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); /* 그림자 효과 */
+}
+.section1 { background-color: #FF5733; }
+.section2 { background-color: #33FF57; }
+.section3 { background-color: #3357FF; }
+.section4 { background-color: #FF33A8; }
+.section5 { background-color: #33FFF5; }
+.section6 { background-color: #FFB533; }
+.section7 { background-color: #8A33FF; }
