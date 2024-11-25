@@ -8,8 +8,10 @@
 
 </head>
 <body>
-    <h1>HCI 실험에 오신 것을 환영합니다!</h1>
-    <p>실험을 시작하기 전에 옵션을 선택하겠습니다.</p>
+    <h1>HCI 실험 설정</h1>
+    <p>실험 컨디션: 0ms ~ 200ms, 50ms 간격</p>
+    <p>라틴 스퀘어 순서가 설정됩니다.</p>
+
     <div class="radio-group">
         <label>
             <input type="radio" name="flag" value="1"> 실험 옵션 1
@@ -19,7 +21,9 @@
             <input type="radio" name="flag" value="2"> 실험 옵션 2
         </label>
     </div>
-    <button onclick="startExperiment()">확인</button>
+    <button id="startButton">확인</button>
+    <button id="resetButton">순서 초기화</button>
+
     <script src="basic_tools.js"></script>
 </body>
 </html>
