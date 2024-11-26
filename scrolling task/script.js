@@ -98,7 +98,7 @@ document.addEventListener("DOMContentLoaded", function () {
         const process = setInterval(() => {
             if (scrollQueue.length > 0) {
                 const deltaY = scrollQueue.shift(); // 큐에서 입력을 꺼냄
-                window.scrollBy({ top: deltaY, behavior: "instant" }); // 즉시 스크롤 이동
+                window.scrollBy({ top: deltaY, behavior: "auto" }); // 즉시 스크롤 이동
 
                 // 스크롤 멈춤 확인 타이머 초기화
                 clearTimeout(scrollStopTimeout);
@@ -144,20 +144,46 @@ document.addEventListener("DOMContentLoaded", function () {
         processScrollQueue(); // 큐 처리 시작
     }
 
+    const touchThreshold = 10; // 스크롤을 트리거하는 최소 이동 거리 (10px)
+    let isTouchActive = false; // 터치가 활성 상태인지 여부
+    
+    // 터치 시작 이벤트
     window.addEventListener("touchstart", function (event) {
-        touchStartY = event.touches[0].clientY;
+        touchStartY = event.touches[0].clientY; // 터치가 시작된 Y 위치 저장
+        isTouchActive = true; // 터치 활성화
     });
-
+    
+    // 터치 이동 이벤트
     window.addEventListener(
         "touchmove",
         function (event) {
-            const touchEndY = event.touches[0].clientY;
-            const deltaY = touchStartY - touchEndY;
-            handleScroll(deltaY); // 터치 이동 거리로 스크롤 처리
+            if (!isTouchActive) return; // 터치가 비활성화된 상태에서는 처리하지 않음
+    
+            const touchEndY = event.touches[0].clientY; // 현재 터치 위치
+            const deltaY = touchStartY - touchEndY; // 터치 이동 거리 계산
+    
+            // 이동 거리가 임계값을 초과한 경우에만 스크롤 처리
+            if (Math.abs(deltaY) > touchThreshold) {
+                const delay = responseDelays[delayIndex]; // 현재 지연 시간 가져오기
+                handleScroll(deltaY, delay); // 터치 이동 거리로 스크롤 처리
+                touchStartY = touchEndY; // 현재 위치를 새로운 시작점으로 설정
+            }
+    
+            // 기본 동작 방지 (스크롤 이외의 터치 이벤트 방지)
             event.preventDefault();
         },
         { passive: false }
     );
+    
+    // 터치 종료 이벤트
+    window.addEventListener("touchend", function () {
+        isTouchActive = false; // 터치 비활성화
+    });
+    
+    // 터치 취소 이벤트 (터치가 중단된 경우)
+    window.addEventListener("touchcancel", function () {
+        isTouchActive = false; // 터치 비활성화
+    });
 
     window.addEventListener(
         "wheel",
