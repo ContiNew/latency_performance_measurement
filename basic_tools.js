@@ -59,7 +59,7 @@ document.addEventListener("DOMContentLoaded", function () {
         sessionStorage.setItem("experimentFlag", flagValue);
 
         // 플래그에 따라 다른 페이지로 이동
-        const nextPage = flagValue === "1" ? "dragging task/drag.html" : "scrolling task/scroll.html";
+        const nextPage = flagValue === "1" ? "dragging task/drag.html" : "scrolling task/scroll_practice.html";
         window.location.href = nextPage;
     });
 

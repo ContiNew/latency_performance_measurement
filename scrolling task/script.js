@@ -4,146 +4,169 @@ document.addEventListener("DOMContentLoaded", function () {
     const currentTrialElement = document.getElementById("currentTrial");
 
     const responseDelays = [0, 50, 100, 150, 200]; // 응답 지연 시간
-    const latinSquare = [
-        [0, 1, 2, 3, 4],
-        [1, 2, 3, 4, 0],
-        [2, 3, 4, 0, 1],
-        [3, 4, 0, 1, 2],
-        [4, 0, 1, 2, 3]
-    ];
+    const totalTrialsPerCombination = 10; // 같은 DIV-지연시간 조합당 최대 트라이얼 횟수
+    const validSections = [...sections].filter((_, index) => index !== 3); // START POINT 제외
+    const maxTrials = validSections.length * responseDelays.length * totalTrialsPerCombination; // 총 트라이얼 수
 
-    const latinIndex = parseInt(localStorage.getItem("latinIndex"), 10) || 0; // 라틴 스퀘어 순서
-    const trialOrder = latinSquare[latinIndex]; // 현재 라틴 스퀘어 순서
-    let trialData = JSON.parse(localStorage.getItem("trialData")) || []; // 이전 데이터 불러오기
-    let currentTrial = 1;
-    let totalTrials = 10 * sections.length; // 각 DIV에 대해 10번씩 트라이얼 진행
-    let currentDelayIndex = 0; // 응답 지연 인덱스
-    let targetDivIndex;
-    let scrollCount = 0;
-    let trialStartTime;
-    let isScrollPending = false; // 지연 중 스크롤 처리 방지
+    const trialData = JSON.parse(localStorage.getItem("trialData")) || []; // 이전 데이터 불러오기
+    const trialCounts = {}; // 각 DIV-지연시간 조합의 트라이얼 횟수 저장
+
+    let currentTrial = trialData.length + 1; // 시작할 트라이얼 번호
+    let scrollQueue = []; // 스크롤 입력 큐
+    let isProcessing = false; // 스크롤 처리가 진행 중인지 여부
     let touchStartY = 0; // 터치 시작 위치
+    let targetDivIndex, delayIndex; // 선택된 DIV와 지연시간 인덱스
+    let scrollCount = 0; // 스크롤 횟수 초기화
+    let trialStartTime = 0; // 트라이얼 시작 시간 초기화
+    let scrollStopTimeout = null; // 스크롤 멈춤 확인 타이머
 
-    // 타겟 섹션 확인 함수
-    function isTargetFullyVisible(target) {
-        const rect = target.getBoundingClientRect();
-        return rect.top >= 0 && rect.bottom <= window.innerHeight;
+    // 결과 페이지로 이동
+    function goToResults() {
+        alert("모든 트라이얼이 완료되었습니다! 결과 페이지로 이동합니다.");
+        window.location.href = "../result/results.html"; // 결과 페이지 URL
+    }
+
+    function isTargetFullyVisible(target, tolerance = 1) {
+        const targetTop = target.offsetTop; // 요소의 상단 위치 (문서 기준)
+        const targetBottom = targetTop + target.offsetHeight; // 요소의 하단 위치
+        const viewportTop = window.scrollY; // 현재 스크롤 위치
+        const viewportBottom = viewportTop + window.innerHeight; // 뷰포트 하단 위치
+
+        // 뷰포트 안에 완전히 포함되는 조건 (오차 허용)
+        return (
+            targetTop >= viewportTop - tolerance &&
+            targetBottom <= viewportBottom + tolerance
+        );
     }
 
     // 트라이얼 시작 함수
+    let actualDivNumber = 0; // 전역 변수로 선언
+
     function startTrial() {
-        if (currentTrial > totalTrials) {
-            console.log("모든 트라이얼이 완료되었습니다!");
+        if (currentTrial > maxTrials) {
+            goToResults();
             return;
         }
-
-        targetDivIndex = currentTrial % sections.length; // 순서대로 DIV 선택
-        const delayIndex = trialOrder[currentDelayIndex % trialOrder.length]; // 라틴 스퀘어 순서에 따라 지연 선택
+    
+        // 랜덤으로 START POINT 제외한 DIV와 지연 시간 선택
+        do {
+            targetDivIndex = Math.floor(Math.random() * validSections.length); // 유효 섹션에서 선택
+            delayIndex = Math.floor(Math.random() * responseDelays.length);
+    
+            const key = `${targetDivIndex}-${responseDelays[delayIndex]}`;
+            if (!trialCounts[key]) trialCounts[key] = 0;
+        } while (
+            trialCounts[`${targetDivIndex}-${responseDelays[delayIndex]}`] >=
+            totalTrialsPerCombination
+        );
+    
+        // 선택된 조합의 트라이얼 횟수 증가
+        const trialKey = `${targetDivIndex}-${responseDelays[delayIndex]}`;
+        trialCounts[trialKey]++;
+    
         const delay = responseDelays[delayIndex];
-
-        targetInfo.textContent = `DIV ${targetDivIndex + 1}`;
+    
+        // 실제 DIV 번호 계산
+        actualDivNumber = targetDivIndex < 3? targetDivIndex + 1 :  targetDivIndex + 2 ; // START POINT 기준 조정
+    
+        targetInfo.textContent = `DIV ${actualDivNumber}, 지연시간 ${delay} ms`;
         currentTrialElement.textContent = currentTrial;
-        scrollCount = 0;
-        trialStartTime = Date.now();
-        currentDelayIndex++;
-
-        // 디버깅: 적용된 지연 시간 출력
-        console.log(`트라이얼 ${currentTrial}: 응답 지연 ${delay} ms 적용`);
-
-        // START POINT로 이동
+    
+        console.log(`트라이얼 ${currentTrial}: DIV ${actualDivNumber}, 지연시간 ${delay} ms`);
+    
+        // **추가된 부분: 알림과 소리**
+        notifyUser(actualDivNumber);
+    
         window.scrollTo({ top: sections[3].offsetTop, behavior: "smooth" });
+    
+        trialStartTime = Date.now();
+        currentTrial++;
     }
 
-    // 트라이얼 종료 및 기록
+    // 사용자 알림 함수
+    function notifyUser(divNumber) {
+        // Alert 메시지
+        alert(`다음 목표: DIV ${divNumber}로 이동하세요!`);
+    }
+
+    function processScrollQueue() {
+        if (isProcessing) return; // 이미 스크롤 처리가 진행 중이면 종료
+        isProcessing = true;
+
+        const delay = responseDelays[delayIndex];
+
+        const process = setInterval(() => {
+            if (scrollQueue.length > 0) {
+                const deltaY = scrollQueue.shift(); // 큐에서 입력을 꺼냄
+                window.scrollBy({ top: deltaY, behavior: "instant" }); // 즉시 스크롤 이동
+
+                // 스크롤 멈춤 확인 타이머 초기화
+                clearTimeout(scrollStopTimeout);
+                scrollStopTimeout = setTimeout(() => {
+                    checkScrollStopped(); // 스크롤 멈춤 상태 확인
+                }, 1000); // 멈춤 감지 대기 시간
+            } else {
+                clearInterval(process); // 큐가 비면 처리를 중단
+                isProcessing = false;
+            }
+        }, delay);
+    }
+
     function endTrial(success) {
         if (success) {
-            const timeTaken = (Date.now() - trialStartTime) / 1000; // 경과 시간 (초)
-            const trialDelay = responseDelays[trialOrder[currentDelayIndex % trialOrder.length]];
+            const timeTaken = (Date.now() - trialStartTime) / 1000;
             trialData.push({
-                trial: currentTrial,
-                target: `DIV ${targetDivIndex + 1}`,
-                delay: trialDelay,
+                trial: currentTrial - 1,
+                target: `DIV ${actualDivNumber}`, // 전역 변수 사용
+                delay: responseDelays[delayIndex],
                 time: timeTaken,
                 scrollCount
             });
-
+    
             localStorage.setItem("trialData", JSON.stringify(trialData));
-            currentTrial++;
-            startTrial(); // 다음 트라이얼 시작
+            startTrial();
         }
     }
 
-    // 스크롤 속도가 0인지 확인
     function checkScrollStopped() {
-        const delayIndex = trialOrder[(currentDelayIndex - 1) % trialOrder.length]; // 현재 적용된 응답 지연
-        const delay = responseDelays[delayIndex];
-
-        console.log(`응답 지연 ${delay} ms 대기 중...`);
-
-        setTimeout(() => {
-            if (isTargetFullyVisible(sections[targetDivIndex])) {
-                console.log("스크롤 속도 0 확인 및 타겟이 온전하게 보임");
-                endTrial(true);
-            } else {
-                console.log("타겟이 온전하게 보이지 않음");
-            }
-        }, delay + 1000); // 응답 지연 + 추가 대기 시간
-    }
-
-    // 마우스 휠 또는 터치 스크롤 처리
-    function handleScroll(deltaY) {
-        if (isScrollPending) {
-            return; // 지연 중에는 추가 입력 무시
+        console.log("스크롤 속도를 확인 중...");
+        if (isTargetFullyVisible(validSections[targetDivIndex])) {
+            console.log(`타겟 DIV ${actualDivNumber}이 뷰포트에 완전히 보입니다. 트라이얼 성공!`);
+            endTrial(true);
+        } else {
+            console.log("타겟이 뷰포트 안에 완전히 보이지 않습니다.");
         }
+    }
+    
 
-        isScrollPending = true;
-        scrollCount++;
-
-        const delayIndex = trialOrder[(currentDelayIndex - 1) % trialOrder.length]; // 현재 적용된 응답 지연
-        const delay = responseDelays[delayIndex];
-
-        console.log(`응답 지연 ${delay} ms 대기 중...`);
-
-        // 지연 시간 후 스크롤 실행
-        setTimeout(() => {
-            isScrollPending = false;
-
-            // 스크롤 동작 수행
-            window.scrollBy({
-                top: deltaY,
-                behavior: "smooth"
-            });
-
-            // 스크롤 속도가 0인지 확인
-            if (isTargetFullyVisible(sections[targetDivIndex])) {
-                setTimeout(() => {
-                    if (isTargetFullyVisible(sections[targetDivIndex])) {
-                        endTrial(true);
-                    }
-                }, 1000); // 성공 여부 1초 후 확인
-            }
-        }, delay); // 응답 지연 적용
+    function handleScroll(deltaY) {
+        scrollQueue.push(deltaY); // 입력값을 큐에 추가
+        processScrollQueue(); // 큐 처리 시작
     }
 
-    // 터치 시작 이벤트
     window.addEventListener("touchstart", function (event) {
-        touchStartY = event.touches[0].clientY; // 터치 시작 Y 좌표 저장
-    }, { passive: false });
+        touchStartY = event.touches[0].clientY;
+    });
 
-    // 터치 이동 이벤트
-    window.addEventListener("touchmove", function (event) {
-        const touchEndY = event.touches[0].clientY; // 터치 종료 Y 좌표
-        const deltaY = touchStartY - touchEndY; // 터치 이동 거리 계산
-        handleScroll(deltaY); // 터치 이동 거리로 스크롤 처리
-        event.preventDefault(); // 기본 터치 동작 방지
-    }, { passive: false });
+    window.addEventListener(
+        "touchmove",
+        function (event) {
+            const touchEndY = event.touches[0].clientY;
+            const deltaY = touchStartY - touchEndY;
+            handleScroll(deltaY); // 터치 이동 거리로 스크롤 처리
+            event.preventDefault();
+        },
+        { passive: false }
+    );
 
-    // 휠 스크롤 이벤트
-    window.addEventListener("wheel", function (event) {
-        handleScroll(event.deltaY); // 휠 이동 거리로 스크롤 처리
-        event.preventDefault(); // 기본 휠 동작 방지
-    }, { passive: false });
+    window.addEventListener(
+        "wheel",
+        function (event) {
+            handleScroll(event.deltaY); // 휠 이동 거리로 스크롤 처리
+            event.preventDefault();
+        },
+        { passive: false }
+    );
 
-    // 초기 트라이얼 시작
     startTrial();
 });
