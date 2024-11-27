@@ -3,7 +3,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const targetInfo = document.getElementById("targetDiv");
     const currentTrialElement = document.getElementById("currentTrial");
 
-    const responseDelays = [0, 100]; // 응답 지연 시간
+    const responseDelays = [0]; // 응답 지연 시간
     const totalTrialsPerCombination = 2; // 같은 DIV-지연시간 조합당 최대 트라이얼 횟수
     const validSections = [...sections].filter((_, index) => index !== 3); // START POINT 제외
     const maxTrials = validSections.length * responseDelays.length * totalTrialsPerCombination; // 총 트라이얼 수
@@ -14,8 +14,6 @@ document.addEventListener("DOMContentLoaded", function () {
     let isProcessing = false; // 스크롤 처리가 진행 중인지 여부
     let touchStartY = 0; // 터치 시작 위치
     let targetDivIndex, delayIndex; // 선택된 DIV와 지연 시간 인덱스
-    let scrollCount = 0; // 스크롤 횟수 초기화
-    let trialStartTime = 0; // 트라이얼 시작 시간 초기화
     let actualDivNumber = 0; // 실제 타겟 DIV 번호
     let scrollStopTimeout = null; // 스크롤 멈춤 확인 타이머 추가
 
