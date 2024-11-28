@@ -137,8 +137,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const currentTarget = document.getElementById(currentTargetId);
         allTargets.forEach(target => target.classList.remove('highlight'));
         currentTarget.classList.add('highlight');
-
         console.log(`현재 작업: ${currentTargetId}로 이동`);
+
+        delay = selectedOrder[currentTaskIndex % 6]; // 현재 작업의 delay 설정
+        console.log(`현재 delay: ${delay}ms`);
         resetCenterCirclePosition();
     }
 
