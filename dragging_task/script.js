@@ -53,6 +53,11 @@ document.addEventListener('DOMContentLoaded', () => {
     let startX = 0;
     let startY = 0;
 
+    // 스타트 버튼을 누르면 centerCircle의 z-index를 1로 변경
+    startButton.addEventListener('click', () => {
+        centerCircle.style.zIndex = 1;
+    });
+    
     centerCircle.addEventListener('touchstart', (e) => {
         e.preventDefault(); // 기본 스크롤 동작 방지
         isDragging = true;
@@ -99,7 +104,7 @@ document.addEventListener('DOMContentLoaded', () => {
             currentTaskIndex++;
             startNextTask();
         } else {
-            alert("잘못된 타겟입니다! 올바른 타겟으로 드롭하세요.");
+            // alert("잘못된 타겟입니다! 올바른 타겟으로 드롭하세요.");
         }
     });
 
