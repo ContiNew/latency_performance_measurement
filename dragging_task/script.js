@@ -6,8 +6,8 @@ const message = overlay.querySelector('.message');
 let currentTarget = null;
 
 // 초기 설정 변수
+const delays = [0, 20, 40, 60, 80, 100];
 const latinSquare = [
-    [0, 20, 40, 60, 80, 100], // 첫 번째 행 수정: 유효한 딜레이 값 추가
     [0, 20, 100, 40, 80, 60],
     [20, 40, 0, 60, 100, 80],
     [40, 60, 20, 80, 0, 100],
@@ -22,15 +22,14 @@ let currentTrialIndex = 0;
 
 // 실험 시작 버튼 클릭
 startButton.addEventListener('click', () => {
-    const userOrder = parseInt(prompt('라틴 스퀘어 순서를 입력하세요 (0~6):'), 10);
-
-    if (isNaN(userOrder) || userOrder < 0 || userOrder >= latinSquare.length) {
-        alert('올바른 숫자를 입력하세요 (0~6).');
+    const userOrder = prompt('라틴 스퀘어 순서를 입력하세요 (1~6):');
+    if (!userOrder || isNaN(userOrder) || userOrder < 1 || userOrder > 6) {
+        alert('올바른 숫자를 입력하세요 (1~6).');
         return;
     }
 
     // 라틴 스퀘어 순서 설정
-    selectedOrder = latinSquare[userOrder];
+    selectedOrder = latinSquare[userOrder - 1];
 
     // 트라이얼 준비
     setupTrials();
