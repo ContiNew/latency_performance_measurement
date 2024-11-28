@@ -12,6 +12,11 @@ const initialPosition = {
     position: 'absolute',
 };
 
+// 터치 이동을 위한 변수
+let isTouching = false;
+let offsetX = 0;
+let offsetY = 0;
+
 // 시작 버튼 클릭 시 오버레이 숨기기 및 초기화
 startButton.addEventListener('click', () => {
     overlay.style.display = 'none';
@@ -33,41 +38,54 @@ function highlightRandomTarget() {
 }
 
 // 터치 동작 지원
-centerCircle.addEventListener('touchstart', (e) => {
-    e.preventDefault();
-    const touch = e.touches[0];
+centerCircle.addEventListener(
+    'touchstart',
+    (e) => {
+        e.preventDefault();
+        const touch = e.touches[0];
 
-    // 원의 현재 위치와 터치 위치 간의 오프셋 계산
-    const circleRect = centerCircle.getBoundingClientRect();
-    const offsetX = touch.clientX - circleRect.left;
-    const offsetY = touch.clientY - circleRect.top;
+        // 원의 현재 위치와 터치 위치 간의 오프셋 계산
+        const circleRect = centerCircle.getBoundingClientRect();
+        offsetX = touch.clientX - circleRect.left;
+        offsetY = touch.clientY - circleRect.top;
 
-    // 오프셋 저장
-    centerCircle.dataset.offsetX = offsetX;
-    centerCircle.dataset.offsetY = offsetY;
+        isTouching = true;
+        centerCircle.style.zIndex = '1'; // 드래그 중 원을 맨 위로
+    },
+    { passive: false }
+);
 
-    centerCircle.style.zIndex = '1'; // 드래그 중 원을 맨 위로
-});
+centerCircle.addEventListener(
+    'touchmove',
+    (e) => {
+        if (!isTouching) return;
 
-centerCircle.addEventListener('touchmove', (e) => {
-    e.preventDefault();
-    const touch = e.touches[0];
+        e.preventDefault();
+        const touch = e.touches[0];
 
-    // 터치 이동 좌표 계산
-    const offsetX = parseFloat(centerCircle.dataset.offsetX);
-    const offsetY = parseFloat(centerCircle.dataset.offsetY);
+        // `requestAnimationFrame`으로 움직임 최적화
+        requestAnimationFrame(() => {
+            const newLeft = touch.clientX - offsetX;
+            const newTop = touch.clientY - offsetY;
 
-    // 터치한 위치를 기준으로 원의 위치 업데이트
-    centerCircle.style.position = 'absolute';
-    centerCircle.style.left = `${touch.clientX - offsetX}px`;
-    centerCircle.style.top = `${touch.clientY - offsetY}px`;
-    centerCircle.style.transform = 'none';
-});
+            centerCircle.style.left = `${newLeft}px`;
+            centerCircle.style.top = `${newTop}px`;
+            centerCircle.style.position = 'absolute';
+            centerCircle.style.transform = 'none';
+        });
+    },
+    { passive: false }
+);
 
-centerCircle.addEventListener('touchend', (e) => {
-    e.preventDefault();
-    prepareNextStep();
-});
+centerCircle.addEventListener(
+    'touchend',
+    (e) => {
+        e.preventDefault();
+        isTouching = false;
+        prepareNextStep();
+    },
+    { passive: false }
+);
 
 // 다음 단계를 준비하는 함수
 function prepareNextStep() {
