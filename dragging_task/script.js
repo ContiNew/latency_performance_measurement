@@ -21,20 +21,11 @@ let trialQueue = [];
 let currentTrialIndex = 0;
 
 // 움직임 딜레이 설정
-let moveDelay = 0;
 let moveQueue = [];
 let isProcessingQueue = false;
 
 // 실험 시작 버튼 클릭
 startButton.addEventListener('click', () => {
-    const userOrder = prompt('라틴 스퀘어 순서를 입력하세요 (1~6):');
-    if (!userOrder || isNaN(userOrder) || userOrder < 1 || userOrder > 6) {
-        alert('올바른 숫자를 입력하세요 (1~6).');
-        return;
-    }
-
-    selectedOrder = latinSquare[userOrder - 1];
-    setupTrials();
     overlay.style.display = 'none';
     startNextTrial();
 });
@@ -67,38 +58,22 @@ function startNextTrial() {
         return;
     }
 
-    // 현재 트라이얼 가져오기
-    const currentTrial = trialQueue[currentTrialIndex];
-    currentTarget = currentTrial.target;
-
-    // 딜레이 값을 moveDelay에 적용
-    moveDelay = currentTrial.delay;
-
-    // 오버레이 표시 후 일정 시간 대기
-    overlay.style.display = 'flex';
-    message.textContent = `타겟: ${currentTarget.id}, 딜레이: ${moveDelay}ms`;
-
-    console.log(`Trial ${currentTrialIndex + 1}: Target=${currentTarget.id}, Delay=${moveDelay}ms`);
-
-    setTimeout(() => {
-        overlay.style.display = 'none';
-        highlightTarget(currentTarget);
-    }, 1000); // 1초 후 오버레이 숨김
-
     currentTrialIndex++;
 }
 
 // 실험 종료 처리
 function endExperiment() {
-    alert('실험이 완료되었습니다!');
     overlay.style.display = 'flex';
-    message.textContent = '실험이 끝났습니다. 감사합니다!';
+    message.textContent = '실험이 완료되었습니다!';
 }
 
-// 타겟 강조
-function highlightTarget(target) {
-    targetCircles.forEach((circle) => circle.classList.remove('highlight'));
-    target.classList.add('highlight');
+// 원을 정중앙으로 이동시키는 함수
+function resetCenterCirclePosition() {
+    centerCircle.style.position = 'absolute';
+    centerCircle.style.left = '50%';
+    centerCircle.style.top = '50%';
+    centerCircle.style.transform = 'translate(-50%, -50%)';
+    centerCircle.style.zIndex = '0';
 }
 
 // 터치 동작 지원
@@ -110,46 +85,25 @@ centerCircle.addEventListener('touchstart', (e) => {
     offsetX = touch.clientX - circleRect.left;
     offsetY = touch.clientY - circleRect.top;
 
-    centerCircle.style.zIndex = '1'; // 드래그 중 원을 맨 위로
+    centerCircle.style.zIndex = '1';
 });
 
 centerCircle.addEventListener('touchmove', (e) => {
     e.preventDefault();
     const touch = e.touches[0];
 
-    moveQueue.push({
-        left: touch.clientX - offsetX,
-        top: touch.clientY - offsetY,
-    });
-
-    processMoveQueue();
+    centerCircle.style.left = `${touch.clientX - offsetX}px`;
+    centerCircle.style.top = `${touch.clientY - offsetY}px`;
+    centerCircle.style.transform = 'none';
 });
 
 centerCircle.addEventListener('touchend', (e) => {
     e.preventDefault();
-    if (currentTarget) {
-        currentTarget.classList.remove('highlight');
-        startNextTrial();
-    }
+
+    // 터치 입력 종료 후 정중앙으로 이동
+    resetCenterCirclePosition();
+
+    // 오버레이 활성화
+    overlay.style.display = 'flex';
+    message.textContent = '준비되시면 시작 버튼을 눌러주세요.';
 });
-
-// 움직임 딜레이 처리
-function processMoveQueue() {
-    if (isProcessingQueue || moveQueue.length === 0) return;
-
-    isProcessingQueue = true;
-
-    const move = moveQueue.shift();
-
-    setTimeout(() => {
-        centerCircle.style.position = 'absolute';
-        centerCircle.style.left = `${move.left}px`;
-        centerCircle.style.top = `${move.top}px`;
-        centerCircle.style.transform = 'none';
-
-        isProcessingQueue = false;
-        if (moveQueue.length > 0) {
-            processMoveQueue();
-        }
-    }, moveDelay);
-}
