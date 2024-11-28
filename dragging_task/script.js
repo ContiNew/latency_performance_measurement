@@ -1,5 +1,4 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // Latin Square 배열
     const latinSquare = [
         [0, 20, 100, 40, 80, 60],
         [20, 40, 0, 60, 100, 80],
@@ -12,7 +11,6 @@ document.addEventListener('DOMContentLoaded', () => {
     let isValidInput = false;
     let selectedOrder = null;
 
-    // Latin Square 입력
     while (!isValidInput) {
         let userInput = prompt("1부터 6 사이의 숫자를 입력하세요.");
         userInput = parseInt(userInput);
@@ -26,12 +24,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // 시작 버튼 활성화
     const startButton = document.getElementById('startButton');
     startButton.disabled = false;
 
-    // 작업 관련 변수 초기화
-    let currentTaskIndex = 0; // 현재 작업 인덱스
+    let currentTaskIndex = 0;
     const targets = [
         "cornerTopLeft",
         "cornerTopRight",
@@ -43,7 +39,6 @@ document.addEventListener('DOMContentLoaded', () => {
         "midBottomRight",
     ];
 
-    // 작업 순서 랜덤 생성
     const taskOrder = [];
     for (let i = 0; i < 3; i++) {
         taskOrder.push(...targets);
@@ -54,40 +49,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const centerCircle = document.getElementById('centerCircle');
     const allTargets = targets.map(id => document.getElementById(id));
-
-    // 작업 진행 함수
-    function startNextTask() {
-        if (currentTaskIndex >= taskOrder.length) {
-            alert("모든 작업이 완료되었습니다!");
-            return;
-        }
-    
-        // 현재 타겟 하이라이트
-        const currentTargetId = taskOrder[currentTaskIndex];
-        const currentTarget = document.getElementById(currentTargetId);
-        allTargets.forEach(target => target.classList.remove('highlight'));
-        currentTarget.classList.add('highlight');
-    
-        console.log(`현재 작업: ${currentTargetId}로 이동`);
-    
-        // centerCircle 위치 리셋
-        resetCenterCirclePosition();
-    }
-    
-    function resetCenterCirclePosition() {
-        centerCircle.style.left = "50%";
-        centerCircle.style.top = "50%";
-        centerCircle.style.transform = "translate(-50%, -50%)";
-    }
-
-    // 터치 이동 변수
     let isDragging = false;
     let startX = 0;
     let startY = 0;
 
-    // 터치 이벤트 등록
     centerCircle.addEventListener('touchstart', (e) => {
+        e.preventDefault(); // 기본 스크롤 동작 방지
         isDragging = true;
+
         const touch = e.touches[0];
         startX = touch.clientX - centerCircle.offsetLeft;
         startY = touch.clientY - centerCircle.offsetTop;
@@ -96,20 +65,22 @@ document.addEventListener('DOMContentLoaded', () => {
     document.addEventListener('touchmove', (e) => {
         if (!isDragging) return;
 
+        e.preventDefault(); // 기본 스크롤 동작 방지
+
         const touch = e.touches[0];
         const moveX = touch.clientX - startX;
         const moveY = touch.clientY - startY;
 
-        // centerCircle 이동
         centerCircle.style.left = `${moveX}px`;
         centerCircle.style.top = `${moveY}px`;
     });
 
     document.addEventListener('touchend', (e) => {
         if (!isDragging) return;
-        isDragging = false;
 
-        // 현재 위치와 타겟 위치 비교
+        isDragging = false;
+        e.preventDefault(); // 기본 스크롤 동작 방지
+
         const touch = e.changedTouches[0];
         const currentTargetId = taskOrder[currentTaskIndex];
         const currentTarget = document.getElementById(currentTargetId);
@@ -118,7 +89,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const touchX = touch.clientX;
         const touchY = touch.clientY;
 
-        // 타겟 영역 확인
         if (
             touchX >= targetRect.left &&
             touchX <= targetRect.right &&
@@ -133,7 +103,27 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // 배열 섞기 유틸리티 함수
+    function startNextTask() {
+        if (currentTaskIndex >= taskOrder.length) {
+            alert("모든 작업이 완료되었습니다!");
+            return;
+        }
+
+        const currentTargetId = taskOrder[currentTaskIndex];
+        const currentTarget = document.getElementById(currentTargetId);
+        allTargets.forEach(target => target.classList.remove('highlight'));
+        currentTarget.classList.add('highlight');
+
+        console.log(`현재 작업: ${currentTargetId}로 이동`);
+        resetCenterCirclePosition();
+    }
+
+    function resetCenterCirclePosition() {
+        centerCircle.style.left = "50%";
+        centerCircle.style.top = "50%";
+        centerCircle.style.transform = "translate(-50%, -50%)";
+    }
+
     function shuffleArray(array) {
         for (let i = array.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
@@ -141,9 +131,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // 첫 작업 시작
     startButton.addEventListener('click', () => {
-        document.querySelector('.overlay').style.display = 'none'; // 오버레이 숨기기
+        document.querySelector('.overlay').style.display = 'none';
         startNextTask();
     });
 });
