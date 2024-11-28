@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
     const latinSquare = [
-        [0, 20, 100, 40, 80, 60],
+        [0, 200, 100, 400, 800, 600],
         [20, 40, 0, 60, 100, 80],
         [40, 60, 20, 80, 0, 100],
         [60, 80, 40, 100, 20, 0],
@@ -21,7 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
             console.log("선택된 Latin Square 순서:", selectedOrder);
             isValidInput = true;
         } else {
-            alert("유효하지 않은 입력입니다. 1부터 6 사이의 숫자를 입력하세요.");
+            // alert("유효하지 않은 입력입니다. 1부터 6 사이의 숫자를 입력하세요.");
         }
     }
 
@@ -47,6 +47,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     console.log("랜덤 작업 순서:", taskOrder);
 
+    startButton.disabled = false;
     let isDragging = false;
     let startX = 0;
     let startY = 0;
@@ -54,8 +55,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // 작업 시작
     startButton.addEventListener('click', () => {
         document.querySelector('.overlay').style.display = 'none'; // 오버레이 숨기기
+        centerCircle.style.zIndex = 1;
         startNextTask();
     });
+
 
     centerCircle.addEventListener('touchstart', (e) => {
         e.preventDefault(); // 기본 스크롤 동작 방지
@@ -112,7 +115,7 @@ document.addEventListener('DOMContentLoaded', () => {
             currentTaskIndex++;
             startNextTask();
         } else {
-            alert("잘못된 타겟입니다! 올바른 타겟으로 드롭하세요.");
+            // alert("잘못된 타겟입니다! 올바른 타겟으로 드롭하세요.");
         }
     });
 
