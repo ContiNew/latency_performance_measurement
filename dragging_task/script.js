@@ -11,6 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let isValidInput = false;
     let selectedOrder = null;
 
+    // Latin Square 입력
     while (!isValidInput) {
         let userInput = prompt("1부터 6 사이의 숫자를 입력하세요.");
         userInput = parseInt(userInput);
@@ -50,36 +51,30 @@ document.addEventListener('DOMContentLoaded', () => {
     let startX = 0;
     let startY = 0;
 
-    // 스크롤 방지 함수
-    function disableScroll() {
-        document.body.style.overflow = "hidden";
-    }
-
-    function enableScroll() {
-        document.body.style.overflow = "auto";
-    }
-
-    startButton.disabled = false;
-    
     // 작업 시작
     startButton.addEventListener('click', () => {
         document.querySelector('.overlay').style.display = 'none'; // 오버레이 숨기기
-        centerCircle.style.zIndex = 1; // z-index 변경
-        disableScroll(); // 스크롤 방지
         startNextTask();
     });
 
-    // 드래그 시작
     centerCircle.addEventListener('touchstart', (e) => {
         e.preventDefault(); // 기본 스크롤 동작 방지
-        isDragging = true;
 
-        const touch = e.touches[0];
-        startX = touch.clientX - centerCircle.offsetLeft;
-        startY = touch.clientY - centerCircle.offsetTop;
+        const delay = selectedOrder[currentTaskIndex % 6]; // delay 설정
+        console.log(`현재 delay: ${delay}ms`);
+
+        // 1. 터치 시작 후 지연 시간 설정
+        setTimeout(() => {
+            isDragging = true;
+
+            const touch = e.touches[0];
+            startX = touch.clientX - centerCircle.offsetLeft;
+            startY = touch.clientY - centerCircle.offsetTop;
+
+            console.log("드래그 시작");
+        }, delay);
     });
 
-    // 드래그 이동
     document.addEventListener('touchmove', (e) => {
         if (!isDragging) return;
 
@@ -93,7 +88,6 @@ document.addEventListener('DOMContentLoaded', () => {
         centerCircle.style.top = `${moveY}px`;
     });
 
-    // 드래그 종료
     document.addEventListener('touchend', (e) => {
         if (!isDragging) return;
 
@@ -125,7 +119,6 @@ document.addEventListener('DOMContentLoaded', () => {
     function startNextTask() {
         if (currentTaskIndex >= taskOrder.length) {
             alert("모든 작업이 완료되었습니다!");
-            enableScroll(); // 스크롤 허용
             return;
         }
 
