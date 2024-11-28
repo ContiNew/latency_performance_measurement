@@ -52,6 +52,7 @@ document.addEventListener('DOMContentLoaded', () => {
     startButton.disabled = false;
 
     let eventQueue = [];
+    let dragEvents = [];
     let delay = 0;
 
     // 작업 시작
@@ -65,7 +66,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     centerCircle.addEventListener('touchstart', (e) => {
         e.preventDefault(); // 기본 스크롤 동작 방지
-        eventQueue = []; // 이벤트 큐 초기화
+        dragEvents = []; // 이벤트 기록 초기화
 
         const centerRect = centerCircle.getBoundingClientRect();
         initialX = (centerRect.left + centerRect.right) / 2;
@@ -84,7 +85,6 @@ document.addEventListener('DOMContentLoaded', () => {
         queueEvent('end', e.changedTouches[0]);
     });
 
-    // touch 이벤트 기록
     function queueEvent(type, touch) {
         const event = {
             type,
@@ -92,7 +92,6 @@ document.addEventListener('DOMContentLoaded', () => {
             y: touch.clientY,
             timestamp: Date.now(),
         };
-        eventQueue.push(event);
         dragEvents.push(event); // 기록 저장
         setTimeout(() => {
             processEvent(event);
@@ -114,12 +113,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 break;
         }
     }
-    // 이벤트 큐와 CSV 저장 함수 추가
-    let dragEvents = [];
+
     function saveDragData(targetName, delay, currentTaskIndex, events, centerX, centerY, targetX, targetY, initialX, initialY, totalTime) {
         const rows = events.map(event => `${event.type},${event.x},${event.y},${event.timestamp}`);
         const csvHeader = "Type,X,Y,Timestamp";
-        const summary = `End_Center_X,End_Center_Y,Target_Center_X,Target_Center_Y,initial_X,initial_Y,Total_Time\n${centerX},${centerY},${targetX},${targetY},${initialX},${initialY},${totalTime}`;
+        const summary = `End_Center_X,End_Center_Y,Target_Center_X,Target_Center_Y,Initial_X,Initial_Y,Total_Time\n${centerX},${centerY},${targetX},${targetY},${initialX},${initialY},${totalTime}`;
         const csvContent = `${csvHeader}\n${rows.join("\n")}\n\n${summary}`;
         const filename = `${targetName}_${delay}_${currentTaskIndex}.csv`;
 
@@ -132,7 +130,6 @@ document.addEventListener('DOMContentLoaded', () => {
         document.body.removeChild(link);
     }
 
-    // checkDropTarget 함수 수정
     function checkDropTarget(x, y) {
         const currentTargetId = taskOrder[currentTaskIndex];
         const currentTarget = document.getElementById(currentTargetId);
@@ -144,11 +141,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const endTime = Date.now();
         const totalTime = endTime - dragEvents[0].timestamp;
 
-        // centerCircle 중심 계산
         const centerX = x;
         const centerY = y;
 
-        // CSV 저장
         saveDragData(
             currentTargetId,
             delay,
@@ -179,7 +174,7 @@ document.addEventListener('DOMContentLoaded', () => {
         currentTarget.classList.add('highlight');
         console.log(`현재 작업: ${currentTargetId}로 이동`);
 
-        delay = selectedOrder[currentTaskIndex % 6]; // 현재 작업의 delay 설정
+        delay = selectedOrder[currentTaskIndex % 6];
         console.log(`현재 delay: ${delay}ms`);
         resetCenterCirclePosition();
     }
