@@ -25,10 +25,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const startButton = document.getElementById('startButton');
-    startButton.disabled = false;
-
-    let currentTaskIndex = 0;
-    const targets = [
+    const centerCircle = document.getElementById('centerCircle');
+    const allTargets = [
         "cornerTopLeft",
         "cornerTopRight",
         "cornerBottomLeft",
@@ -37,27 +35,39 @@ document.addEventListener('DOMContentLoaded', () => {
         "midTopRight",
         "midBottomLeft",
         "midBottomRight",
-    ];
+    ].map(id => document.getElementById(id));
 
+    let currentTaskIndex = 0;
     const taskOrder = [];
     for (let i = 0; i < 3; i++) {
-        taskOrder.push(...targets);
+        taskOrder.push(...allTargets.map(target => target.id));
     }
     shuffleArray(taskOrder);
 
     console.log("랜덤 작업 순서:", taskOrder);
 
-    const centerCircle = document.getElementById('centerCircle');
-    const allTargets = targets.map(id => document.getElementById(id));
     let isDragging = false;
     let startX = 0;
     let startY = 0;
 
-    // 스타트 버튼을 누르면 centerCircle의 z-index를 1로 변경
+    // 스크롤 방지 함수
+    function disableScroll() {
+        document.body.style.overflow = "hidden";
+    }
+
+    function enableScroll() {
+        document.body.style.overflow = "auto";
+    }
+
+    // 작업 시작
     startButton.addEventListener('click', () => {
-        centerCircle.style.zIndex = 1;
+        document.querySelector('.overlay').style.display = 'none'; // 오버레이 숨기기
+        centerCircle.style.zIndex = 1; // z-index 변경
+        disableScroll(); // 스크롤 방지
+        startNextTask();
     });
-    
+
+    // 드래그 시작
     centerCircle.addEventListener('touchstart', (e) => {
         e.preventDefault(); // 기본 스크롤 동작 방지
         isDragging = true;
@@ -67,6 +77,7 @@ document.addEventListener('DOMContentLoaded', () => {
         startY = touch.clientY - centerCircle.offsetTop;
     });
 
+    // 드래그 이동
     document.addEventListener('touchmove', (e) => {
         if (!isDragging) return;
 
@@ -80,6 +91,7 @@ document.addEventListener('DOMContentLoaded', () => {
         centerCircle.style.top = `${moveY}px`;
     });
 
+    // 드래그 종료
     document.addEventListener('touchend', (e) => {
         if (!isDragging) return;
 
@@ -104,13 +116,14 @@ document.addEventListener('DOMContentLoaded', () => {
             currentTaskIndex++;
             startNextTask();
         } else {
-            // alert("잘못된 타겟입니다! 올바른 타겟으로 드롭하세요.");
+            alert("잘못된 타겟입니다! 올바른 타겟으로 드롭하세요.");
         }
     });
 
     function startNextTask() {
         if (currentTaskIndex >= taskOrder.length) {
             alert("모든 작업이 완료되었습니다!");
+            enableScroll(); // 스크롤 허용
             return;
         }
 
@@ -135,9 +148,4 @@ document.addEventListener('DOMContentLoaded', () => {
             [array[i], array[j]] = [array[j], array[i]];
         }
     }
-
-    startButton.addEventListener('click', () => {
-        document.querySelector('.overlay').style.display = 'none';
-        startNextTask();
-    });
 });
