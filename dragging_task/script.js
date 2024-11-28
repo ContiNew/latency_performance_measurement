@@ -8,6 +8,7 @@ let currentTarget = null;
 // 초기 설정 변수
 const delays = [0, 20, 40, 60, 80, 100];
 const latinSquare = [
+    [0, 0, 0, 0, 0, 0],
     [0, 20, 100, 40, 80, 60],
     [20, 40, 0, 60, 100, 80],
     [40, 60, 20, 80, 0, 100],
@@ -28,12 +29,12 @@ let isProcessingQueue = false;
 // 실험 시작 버튼 클릭
 startButton.addEventListener('click', () => {
     const userOrder = prompt('라틴 스퀘어 순서를 입력하세요 (1~6):');
-    if (!userOrder || isNaN(userOrder) || userOrder < 1 || userOrder > 6) {
+    if (!userOrder || isNaN(userOrder) || userOrder < 0 || userOrder > 6) {
         alert('올바른 숫자를 입력하세요 (1~6).');
         return;
     }
 
-    selectedOrder = latinSquare[userOrder - 1];
+    selectedOrder = latinSquare[userOrder];
     setupTrials();
     overlay.style.display = 'none';
     startNextTrial();
@@ -63,7 +64,7 @@ function shuffleArray(array) {
 // 다음 트라이얼 시작
 function startNextTrial() {
     if (currentTrialIndex >= trialQueue.length) {
-        alert('실험이 완료되었습니다!');
+        endExperiment();
         return;
     }
 
@@ -76,7 +77,13 @@ function startNextTrial() {
     message.textContent = `타겟: ${currentTarget.id}, 딜레이: ${delay}ms`;
 
     console.log(`Trial ${currentTrialIndex + 1}: Target=${currentTarget.id}, Delay=${delay}ms`);
-    currentTrialIndex++;
+}
+
+// 실험 종료 처리
+function endExperiment() {
+    alert('실험이 완료되었습니다!');
+    overlay.style.display = 'flex';
+    message.textContent = '실험이 끝났습니다. 감사합니다!';
 }
 
 // 타겟 강조
@@ -114,6 +121,7 @@ centerCircle.addEventListener('touchend', (e) => {
     // 다음 트라이얼로 넘어가기
     if (currentTarget) {
         currentTarget.classList.remove('highlight');
+        currentTrialIndex++;
         startNextTrial();
     }
 });
