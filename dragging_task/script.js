@@ -4,9 +4,6 @@ const startButton = document.getElementById('startButton');
 const overlay = document.querySelector('.overlay');
 let currentTarget = null;
 
-let touchStartX = 0;
-let touchStartY = 0;
-
 // 중앙으로 돌아가는 초기 위치 저장
 const initialPosition = {
     left: '50%',
@@ -39,8 +36,15 @@ function highlightRandomTarget() {
 centerCircle.addEventListener('touchstart', (e) => {
     e.preventDefault();
     const touch = e.touches[0];
-    touchStartX = touch.clientX;
-    touchStartY = touch.clientY;
+
+    // 원의 현재 위치와 터치 위치 간의 오프셋 계산
+    const circleRect = centerCircle.getBoundingClientRect();
+    const offsetX = touch.clientX - circleRect.left;
+    const offsetY = touch.clientY - circleRect.top;
+
+    // 오프셋 저장
+    centerCircle.dataset.offsetX = offsetX;
+    centerCircle.dataset.offsetY = offsetY;
 
     centerCircle.style.zIndex = '1'; // 드래그 중 원을 맨 위로
 });
@@ -48,16 +52,16 @@ centerCircle.addEventListener('touchstart', (e) => {
 centerCircle.addEventListener('touchmove', (e) => {
     e.preventDefault();
     const touch = e.touches[0];
-    const deltaX = touch.clientX - touchStartX;
-    const deltaY = touch.clientY - touchStartY;
 
+    // 터치 이동 좌표 계산
+    const offsetX = parseFloat(centerCircle.dataset.offsetX);
+    const offsetY = parseFloat(centerCircle.dataset.offsetY);
+
+    // 터치한 위치를 기준으로 원의 위치 업데이트
     centerCircle.style.position = 'absolute';
-    centerCircle.style.left = `${centerCircle.offsetLeft + deltaX}px`;
-    centerCircle.style.top = `${centerCircle.offsetTop + deltaY}px`;
+    centerCircle.style.left = `${touch.clientX - offsetX}px`;
+    centerCircle.style.top = `${touch.clientY - offsetY}px`;
     centerCircle.style.transform = 'none';
-
-    touchStartX = touch.clientX;
-    touchStartY = touch.clientY;
 });
 
 centerCircle.addEventListener('touchend', (e) => {
