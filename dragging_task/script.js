@@ -21,6 +21,7 @@ let trialQueue = [];
 let currentTrialIndex = 0;
 
 // 움직임 딜레이 설정
+const moveDelay = 100;
 let moveQueue = [];
 let isProcessingQueue = false;
 
@@ -68,6 +69,7 @@ function startNextTrial() {
 
     const currentTrial = trialQueue[currentTrialIndex];
     currentTarget = currentTrial.target;
+    moveDelay = currentTrial.delay;
 
     // 강조 및 딜레이 설정
     highlightTarget(currentTarget);
@@ -110,11 +112,19 @@ centerCircle.addEventListener('touchmove', (e) => {
 
 centerCircle.addEventListener('touchend', (e) => {
     e.preventDefault();
+    
+    resetCenterCirclePosition();
+
+    // 오버레이 활성화
+    overlay.style.display = 'flex';
+    message.textContent = '준비되시면 시작 버튼을 눌러주세요.';
+
     // 다음 트라이얼로 넘어가기
     if (currentTarget) {
         currentTarget.classList.remove('highlight');
         startNextTrial();
     }
+    
 });
 
 // 움직임 딜레이 처리
@@ -135,5 +145,13 @@ function processMoveQueue() {
         if (moveQueue.length > 0) {
             processMoveQueue();
         }
-    }, );
+    }, moveDelay);
+}
+
+// 원 위치 중앙으로 초기화
+function resetCenterCirclePosition() {
+    centerCircle.style.position = 'absolute';
+    centerCircle.style.left = '50%';
+    centerCircle.style.top = '50%';
+    centerCircle.style.transform = 'translate(-50%, -50%)';
 }
