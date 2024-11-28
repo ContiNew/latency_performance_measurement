@@ -6,7 +6,7 @@ body, html {
     margin: 0;
 }
 
-.container {
+.wrapper {
     position: relative;
     width: 100vw;
     height: 100vh;
@@ -35,14 +35,15 @@ body, html {
     cursor: pointer;
 }
 
-/* 모든 상자를 중앙의 검은색 상자 크기로 통일 */
-#centerBox,
-.cornerBox {
-    width: 50px;
-    height: 50px;
+/* 모든 상자를 중앙의 검은색 원 크기로 통일 */
+#centerCircle,
+.cornerCircle {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
 }
 
-#centerBox {
+#centerCircle {
     position: absolute;
     top: 50%;
     left: 50%;
@@ -51,50 +52,50 @@ body, html {
     cursor: pointer;
 }
 
-/* 모서리에 있는 빨간색 상자를 정확히 각 모서리에 위치시킴 */
-.cornerBox {
+/* 모서리에 있는 빨간색 원을 정확히 각 모서리에 위치시킴 */
+.cornerCircle {
     position: absolute;
-    background-color: lightcoral;
+    background-color: rgb(136, 132, 132);
 }
 
 /* 모서리 위치 */
-#topLeft {
+#cornerTopLeft {
     top: 2vh;
     left: 2vw;
 }
 
-#topRight {
+#cornerTopRight {
     top: 2vh;
     right: 2vw;
 }
 
-#bottomLeft {
+#cornerBottomLeft {
     bottom: 2vh;
     left: 2vw;
 }
 
-#bottomRight {
+#cornerBottomRight {
     bottom: 2vh;
     right: 2vw;
 }
 
-/* 중앙과 각 모서리의 중간 지점에 위치한 빨간색 상자 */
-#topLeftCenter {
+/* 중앙과 각 모서리의 중간 지점에 위치한 빨간색 원 */
+#midTopLeft {
     top: 26vh;
     left: 26vw;
 }
 
-#topRightCenter {
+#midTopRight {
     top: 26vh;
     right: 26vw;
 }
 
-#bottomLeftCenter {
+#midBottomLeft {
     bottom: 26vh;
     left: 26vw;
 }
 
-#bottomRightCenter {
+#midBottomRight {
     bottom: 26vh;
     right: 26vw;
 }
@@ -104,7 +105,7 @@ body, html {
 }
 
 /* 성공/실패 메시지 스타일 */
-.result-message {
+.resultMessage {
     position: absolute;
     top: 50%;
     left: 50%;
@@ -116,5 +117,3 @@ body, html {
     display: none;
     z-index: 20;
 }
-
-/* 기존 CSS는 그대로 유지됩니다. */
