@@ -145,7 +145,7 @@ function processMoveQueue() {
         if (moveQueue.length > 0) {
             processMoveQueue();
         }
-    }, moveDelay);
+    }, 0);
 }
 
 // 원 위치 중앙으로 초기화
