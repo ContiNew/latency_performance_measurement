@@ -3,7 +3,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const targetInfo = document.getElementById("targetDiv");
     const currentTrialElement = document.getElementById("currentTrial");
 
-    const responseDelays = [0, 50, 100, 150, 200, 250];
+    const responseDelays = [0, 20, 40, 60, 80, 100];
     const totalTrialsPerCombination = 3;
     const validSections = [...sections].filter((_, index) => index !== 3); // START POINT 제외
     const maxTrials = validSections.length * responseDelays.length * totalTrialsPerCombination;
@@ -97,25 +97,29 @@ document.addEventListener("DOMContentLoaded", function () {
     function processScrollQueue() {
         if (isProcessing) return;
         isProcessing = true;
-    
+
+        const delay = responseDelays[delayIndex];
+
         function process() {
             if (scrollQueue.length > 0) {
                 const deltaY = scrollQueue.shift();
-    
-                window.scrollBy({ top: deltaY, behavior: "auto" });
-                scrollCount++;
-    
-                clearTimeout(scrollStopTimeout);
-                scrollStopTimeout = setTimeout(() => {
-                    checkScrollStopped();
-                }, 1000);
-    
-                requestAnimationFrame(process);
+
+                setTimeout(() => {
+                    window.scrollBy({ top: deltaY, behavior: "auto" });
+                    scrollCount++;
+
+                    clearTimeout(scrollStopTimeout);
+                    scrollStopTimeout = setTimeout(() => {
+                        checkScrollStopped();
+                    }, 1000);
+
+                    requestAnimationFrame(process);
+                }, delay);
             } else {
                 isProcessing = false;
             }
         }
-    
+
         requestAnimationFrame(process);
     }
 
@@ -166,10 +170,10 @@ document.addEventListener("DOMContentLoaded", function () {
 
     function handleScroll(deltaY) {
         totalScrollCount++; // 모든 스크롤 동작에 대해 총 카운트 증가
-    
+
         const isTargetAbove = actualDivNumber <= 3; // 타겟이 DIV 1,2,3인지 여부
         const isScrollDown = deltaY > 0; // 현재 스크롤 방향 (아래에서 위로 스크롤: true)
-    
+
         if (isScrollDown) {
             // 아래에서 위로 스크롤
             downScrollCount++; // downScroll 증가
@@ -183,17 +187,13 @@ document.addEventListener("DOMContentLoaded", function () {
                 reverseScrollCount++; // 아래로 가야 하지만 위로 스크롤한 경우
             }
         }
-    
+
         console.log(
             `Total Scrolls: ${totalScrollCount}, Up Scrolls: ${upScrollCount}, Down Scrolls: ${downScrollCount}, Reverse Scrolls: ${reverseScrollCount}`
         );
-    
-        const delay = responseDelays[delayIndex];
-    
-        setTimeout(() => {
-            scrollQueue.push(deltaY); // 지연 후 큐에 추가
-            processScrollQueue(); // 큐 처리 시작
-        }, delay);
+
+        scrollQueue.push(deltaY);
+        processScrollQueue(); // 기존의 큐 처리 유지
     }
 
 

@@ -3,7 +3,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const targetInfo = document.getElementById("targetDiv");
     const currentTrialElement = document.getElementById("currentTrial");
 
-    const responseDelays = [0]; // 응답 지연 시간
+    const responseDelays = [0, 200]; // 응답 지연 시간
     const totalTrialsPerCombination = 1; // 같은 DIV-지연시간 조합당 최대 트라이얼 횟수
     const validSections = [...sections].filter((_, index) => index !== 3); // START POINT 제외
     const maxTrials = validSections.length * responseDelays.length * totalTrialsPerCombination; // 총 트라이얼 수
@@ -16,6 +16,13 @@ document.addEventListener("DOMContentLoaded", function () {
     let targetDivIndex, delayIndex; // 선택된 DIV와 지연 시간 인덱스
     let actualDivNumber = 0; // 실제 타겟 DIV 번호
     let scrollStopTimeout = null; // 스크롤 멈춤 확인 타이머 추가
+
+    // 스크롤 카운터 초기화
+    let totalScrollCount = 0;
+    let downScrollCount = 0;
+    let upScrollCount = 0;
+    let reverseScrollCount = 0;
+    let scrollCount = 0; // 스크롤 처리 횟수 초기화
 
     function endPractice() {
         alert("연습이 완료되었습니다! 이제 본 실험을 진행하세요.");
@@ -72,22 +79,25 @@ document.addEventListener("DOMContentLoaded", function () {
         if (isProcessing) return;
         isProcessing = true;
 
-        const delay = responseDelays[delayIndex];
-
-        const process = setInterval(() => {
+        function process() {
             if (scrollQueue.length > 0) {
                 const deltaY = scrollQueue.shift();
-                window.scrollBy({ top: deltaY, behavior: "auto" });
 
-                clearTimeout(scrollStopTimeout); // 기존 타이머 초기화
+                window.scrollBy({ top: deltaY, behavior: "auto" });
+                scrollCount++; // 스크롤 처리 횟수 증가
+
+                clearTimeout(scrollStopTimeout);
                 scrollStopTimeout = setTimeout(() => {
                     checkScrollStopped();
                 }, 1000);
+
+                requestAnimationFrame(process);
             } else {
-                clearInterval(process);
                 isProcessing = false;
             }
-        }, delay);
+        }
+
+        requestAnimationFrame(process);
     }
 
     function checkScrollStopped() {
@@ -101,8 +111,35 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function handleScroll(deltaY) {
-        scrollQueue.push(deltaY);
-        processScrollQueue();
+        totalScrollCount++; // 모든 스크롤 동작에 대해 총 카운트 증가
+
+        const isTargetAbove = actualDivNumber <= 3; // 타겟이 DIV 1,2,3인지 여부
+        const isScrollDown = deltaY > 0; // 현재 스크롤 방향 (아래에서 위로 스크롤: true)
+
+        if (isScrollDown) {
+            // 아래에서 위로 스크롤
+            downScrollCount++; // downScroll 증가
+            if (isTargetAbove) {
+                reverseScrollCount++; // 위로 가야 하지만 아래로 스크롤한 경우
+            }
+        } else {
+            // 위에서 아래로 스크롤
+            upScrollCount++; // upScroll 증가
+            if (!isTargetAbove) {
+                reverseScrollCount++; // 아래로 가야 하지만 위로 스크롤한 경우
+            }
+        }
+
+        console.log(
+            `Total Scrolls: ${totalScrollCount}, Up Scrolls: ${upScrollCount}, Down Scrolls: ${downScrollCount}, Reverse Scrolls: ${reverseScrollCount}`
+        );
+
+        const delay = responseDelays[delayIndex];
+
+        setTimeout(() => {
+            scrollQueue.push(deltaY); // 지연 후 큐에 추가
+            processScrollQueue(); // 큐 처리 시작
+        }, delay);
     }
 
     const touchThreshold = 10;
