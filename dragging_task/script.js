@@ -59,6 +59,8 @@ document.addEventListener('DOMContentLoaded', () => {
         document.body.style.overflow = "auto";
     }
 
+    startButton.disabled = false;
+    
     // 작업 시작
     startButton.addEventListener('click', () => {
         document.querySelector('.overlay').style.display = 'none'; // 오버레이 숨기기
