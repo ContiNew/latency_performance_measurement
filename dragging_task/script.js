@@ -1,12 +1,4 @@
-const centerCircle = document.getElementById('centerCircle');
-const targetCircles = document.querySelectorAll('.cornerCircle');
-const startButton = document.getElementById('startButton');
-const overlay = document.querySelector('.overlay');
-const message = overlay.querySelector('.message');
-let currentTarget = null;
-
-// 초기 설정 변수
-const delays = [0, 20, 40, 60, 80, 100];
+// Latin Square 배열
 const latinSquare = [
     [0, 20, 100, 40, 80, 60],
     [20, 40, 0, 60, 100, 80],
@@ -16,142 +8,105 @@ const latinSquare = [
     [100, 0, 80, 20, 60, 40],
 ];
 
-let selectedOrder = [];
-let trialQueue = [];
-let currentTrialIndex = 0;
+// 페이지 로드 시 작업 초기화
+document.addEventListener('DOMContentLoaded', () => {
+    let isValidInput = false;
+    let selectedOrder = null;
 
-// 움직임 딜레이 설정
-const moveDelay = 100;
-let moveQueue = [];
-let isProcessingQueue = false;
+    // Latin Square 입력
+    while (!isValidInput) {
+        let userInput = prompt("1부터 6 사이의 숫자를 입력하세요.");
+        userInput = parseInt(userInput);
 
-// 실험 시작 버튼 클릭
-startButton.addEventListener('click', () => {
-    const userOrder = prompt('라틴 스퀘어 순서를 입력하세요 (1~6):');
-    if (!userOrder || isNaN(userOrder) || userOrder < 1 || userOrder > 6) {
-        alert('올바른 숫자를 입력하세요 (1~6).');
-        return;
+        if (userInput >= 1 && userInput <= 6) {
+            selectedOrder = latinSquare[userInput - 1];
+            console.log("선택된 Latin Square 순서:", selectedOrder);
+            isValidInput = true;
+        } else {
+            alert("유효하지 않은 입력입니다. 1부터 6 사이의 숫자를 입력하세요.");
+        }
     }
 
-    selectedOrder = latinSquare[userOrder - 1];
-    setupTrials();
-    overlay.style.display = 'none';
-    startNextTrial();
-});
+    // 시작 버튼 활성화
+    const startButton = document.getElementById('startButton');
+    startButton.disabled = false;
 
-// 8개의 타겟과 딜레이를 조합하여 24번의 실험 준비
-function setupTrials() {
-    const targets = Array.from(targetCircles);
-    const repetitions = 3;
+    // 작업 관련 변수 초기화
+    let currentTaskIndex = 0; // 현재 작업 인덱스
+    const targets = [
+        "cornerTopLeft",
+        "cornerTopRight",
+        "cornerBottomLeft",
+        "cornerBottomRight",
+        "midTopLeft",
+        "midTopRight",
+        "midBottomLeft",
+        "midBottomRight",
+    ];
 
-    for (let i = 0; i < repetitions; i++) {
-        const shuffledTargets = shuffleArray(targets); // 타겟 순서를 랜덤으로 섞음
-        shuffledTargets.forEach((target) => {
-            trialQueue.push({
-                target: target,
-                delay: selectedOrder[trialQueue.length % selectedOrder.length],
-            });
-        });
+    // 작업 순서 랜덤 생성
+    const taskOrder = [];
+    for (let i = 0; i < 3; i++) {
+        taskOrder.push(...targets);
     }
-}
+    shuffleArray(taskOrder);
 
-// 배열을 랜덤으로 섞는 함수
-function shuffleArray(array) {
-    return array.sort(() => Math.random() - 0.5);
-}
+    console.log("랜덤 작업 순서:", taskOrder);
 
-// 다음 트라이얼 시작
-function startNextTrial() {
-    if (currentTrialIndex >= trialQueue.length) {
-        alert('실험이 완료되었습니다!');
-        return;
+    const centerCircle = document.getElementById('centerCircle');
+    const allTargets = targets.map(id => document.getElementById(id));
+
+    // 작업 진행 함수
+    function startNextTask() {
+        if (currentTaskIndex >= taskOrder.length) {
+            alert("모든 작업이 완료되었습니다!");
+            return;
+        }
+
+        // 현재 타겟 하이라이트
+        const currentTargetId = taskOrder[currentTaskIndex];
+        const currentTarget = document.getElementById(currentTargetId);
+        allTargets.forEach(target => target.classList.remove('highlight'));
+        currentTarget.classList.add('highlight');
+
+        console.log(`현재 작업: ${currentTargetId}로 이동`);
     }
 
-    const currentTrial = trialQueue[currentTrialIndex];
-    currentTarget = currentTrial.target;
-    moveDelay = currentTrial.delay;
-
-    // 강조 및 딜레이 설정
-    highlightTarget(currentTarget);
-    const delay = currentTrial.delay;
-    message.textContent = `타겟: ${currentTarget.id}, 딜레이: ${delay}ms`;
-
-    console.log(`Trial ${currentTrialIndex + 1}: Target=${currentTarget.id}, Delay=${delay}ms`);
-    currentTrialIndex++;
-}
-
-// 타겟 강조
-function highlightTarget(target) {
-    targetCircles.forEach((circle) => circle.classList.remove('highlight'));
-    target.classList.add('highlight');
-}
-
-// 터치 동작 지원
-centerCircle.addEventListener('touchstart', (e) => {
-    e.preventDefault();
-    const touch = e.touches[0];
-
-    const circleRect = centerCircle.getBoundingClientRect();
-    offsetX = touch.clientX - circleRect.left;
-    offsetY = touch.clientY - circleRect.top;
-
-    centerCircle.style.zIndex = '1'; // 드래그 중 원을 맨 위로
-});
-
-centerCircle.addEventListener('touchmove', (e) => {
-    e.preventDefault();
-    const touch = e.touches[0];
-
-    moveQueue.push({
-        left: touch.clientX - offsetX,
-        top: touch.clientY - offsetY,
+    // 드래그 앤 드롭 이벤트 설정
+    centerCircle.addEventListener('dragstart', (e) => {
+        e.dataTransfer.setData("text/plain", "centerCircle");
     });
 
-    processMoveQueue();
-});
+    allTargets.forEach(target => {
+        target.addEventListener('dragover', (e) => {
+            e.preventDefault(); // 드롭 가능하도록 설정
+        });
 
-centerCircle.addEventListener('touchend', (e) => {
-    e.preventDefault();
-    
-    resetCenterCirclePosition();
+        target.addEventListener('drop', (e) => {
+            e.preventDefault();
+            const draggedId = e.dataTransfer.getData("text/plain");
 
-    // 오버레이 활성화
-    overlay.style.display = 'flex';
-    message.textContent = '준비되시면 시작 버튼을 눌러주세요.';
+            if (draggedId === "centerCircle" && target.id === taskOrder[currentTaskIndex]) {
+                console.log(`${target.id}에 성공적으로 드롭되었습니다.`);
+                currentTaskIndex++;
+                startNextTask();
+            } else {
+                alert("잘못된 타겟입니다! 올바른 타겟으로 드롭하세요.");
+            }
+        });
+    });
 
-    // 다음 트라이얼로 넘어가기
-    if (currentTarget) {
-        currentTarget.classList.remove('highlight');
-        startNextTrial();
-    }
-    
-});
-
-// 움직임 딜레이 처리
-function processMoveQueue() {
-    if (isProcessingQueue || moveQueue.length === 0) return;
-
-    isProcessingQueue = true;
-
-    const move = moveQueue.shift();
-
-    setTimeout(() => {
-        centerCircle.style.position = 'absolute';
-        centerCircle.style.left = `${move.left}px`;
-        centerCircle.style.top = `${move.top}px`;
-        centerCircle.style.transform = 'none';
-
-        isProcessingQueue = false;
-        if (moveQueue.length > 0) {
-            processMoveQueue();
+    // 배열 섞기 유틸리티 함수
+    function shuffleArray(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
         }
-    }, moveDelay);
-}
+    }
 
-// 원 위치 중앙으로 초기화
-function resetCenterCirclePosition() {
-    centerCircle.style.position = 'absolute';
-    centerCircle.style.left = '50%';
-    centerCircle.style.top = '50%';
-    centerCircle.style.transform = 'translate(-50%, -50%)';
-}
+    // 첫 작업 시작
+    startButton.addEventListener('click', () => {
+        document.querySelector('.overlay').style.display = 'none'; // 오버레이 숨기기
+        startNextTask();
+    });
+});

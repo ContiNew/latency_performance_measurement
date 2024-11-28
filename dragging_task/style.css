@@ -101,7 +101,8 @@ body, html {
 }
 
 .highlight {
-    background-color: red;
+    background-color: red !important;
+    /* border: 2px solid yellow; */
 }
 
 /* 성공/실패 메시지 스타일 */
