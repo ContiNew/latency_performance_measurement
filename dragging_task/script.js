@@ -79,21 +79,21 @@ document.addEventListener('DOMContentLoaded', () => {
         delayTimeout = setTimeout(() => {
             isDragging = true; // 지연 후 드래그 활성화
             console.log("드래그 시작");
+            replayTouchMoves(); // 저장된 이동 경로 재생
         }, delay);
     });
 
     centerCircle.addEventListener('touchmove', (e) => {
-        if (!isDragging) {
-            const touch = e.touches[0];
-            touchMoves.push({ x: touch.clientX, y: touch.clientY });
-            return; // 지연 중에는 이동만 기록
-        }
-
-        e.preventDefault(); // 기본 스크롤 동작 방지
         const touch = e.touches[0];
         const moveX = touch.clientX - startX;
         const moveY = touch.clientY - startY;
 
+        if (!isDragging) {
+            touchMoves.push({ moveX, moveY }); // 지연 중에는 이동 경로 기록
+            return;
+        }
+
+        e.preventDefault(); // 기본 스크롤 동작 방지
         centerCircle.style.left = `${moveX}px`;
         centerCircle.style.top = `${moveY}px`;
     });
@@ -129,6 +129,23 @@ document.addEventListener('DOMContentLoaded', () => {
             alert("잘못된 타겟입니다! 올바른 타겟으로 드롭하세요.");
         }
     });
+
+    function replayTouchMoves() {
+        let i = 0;
+
+        function animate() {
+            if (i >= touchMoves.length) return;
+
+            const { moveX, moveY } = touchMoves[i];
+            centerCircle.style.left = `${moveX}px`;
+            centerCircle.style.top = `${moveY}px`;
+
+            i++;
+            requestAnimationFrame(animate);
+        }
+
+        animate();
+    }
 
     function startNextTask() {
         if (currentTaskIndex >= taskOrder.length) {
