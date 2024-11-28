@@ -53,8 +53,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let startX = 0;
     let startY = 0;
 
-    let touchStartTime = 0;
     let touchMoves = [];
+    let delayTimeout = null;
 
     // 작업 시작
     startButton.addEventListener('click', () => {
@@ -65,62 +65,44 @@ document.addEventListener('DOMContentLoaded', () => {
 
     centerCircle.addEventListener('touchstart', (e) => {
         e.preventDefault(); // 기본 스크롤 동작 방지
-        touchStartTime = Date.now();
+        isDragging = false; // 초기 상태에서 드래그 비활성화
         touchMoves = []; // 이전 기록 초기화
 
-        const delay = selectedOrder[currentTaskIndex % 6]; // delay 설정
-        console.log(`현재 delay: ${delay}ms`);
-
-        // 터치 시작 정보 기록
         const touch = e.touches[0];
         startX = touch.clientX - centerCircle.offsetLeft;
         startY = touch.clientY - centerCircle.offsetTop;
 
-        // 이동 기록 시작
-        document.addEventListener('touchmove', recordTouchMove);
-        setTimeout(() => {
-            isDragging = true;
+        const delay = selectedOrder[currentTaskIndex % 6]; // delay 설정
+        console.log(`현재 delay: ${delay}ms`);
+
+        // 지연 시간 적용
+        delayTimeout = setTimeout(() => {
+            isDragging = true; // 지연 후 드래그 활성화
             console.log("드래그 시작");
-            replayTouchMoves();
         }, delay);
     });
 
-    function recordTouchMove(e) {
-        const touch = e.touches[0];
-        const moveX = touch.clientX;
-        const moveY = touch.clientY;
-        const timestamp = Date.now() - touchStartTime;
-        touchMoves.push({ moveX, moveY, timestamp });
-    }
-
-    function replayTouchMoves() {
-        if (touchMoves.length === 0) return;
-
-        const startTime = Date.now();
-        let i = 0;
-
-        function animate() {
-            if (i >= touchMoves.length) {
-                document.removeEventListener('touchmove', recordTouchMove);
-                return;
-            }
-
-            const { moveX, moveY, timestamp } = touchMoves[i];
-            const elapsedTime = Date.now() - startTime;
-
-            if (elapsedTime >= timestamp) {
-                centerCircle.style.left = `${moveX}px`;
-                centerCircle.style.top = `${moveY}px`;
-                i++;
-            }
-
-            requestAnimationFrame(animate);
+    centerCircle.addEventListener('touchmove', (e) => {
+        if (!isDragging) {
+            const touch = e.touches[0];
+            touchMoves.push({ x: touch.clientX, y: touch.clientY });
+            return; // 지연 중에는 이동만 기록
         }
 
-        animate();
-    }
+        e.preventDefault(); // 기본 스크롤 동작 방지
+        const touch = e.touches[0];
+        const moveX = touch.clientX - startX;
+        const moveY = touch.clientY - startY;
 
-    document.addEventListener('touchend', (e) => {
+        centerCircle.style.left = `${moveX}px`;
+        centerCircle.style.top = `${moveY}px`;
+    });
+
+    centerCircle.addEventListener('touchend', (e) => {
+        if (delayTimeout) {
+            clearTimeout(delayTimeout); // delay 종료 시점 클리어
+        }
+
         if (!isDragging) return;
 
         isDragging = false;
