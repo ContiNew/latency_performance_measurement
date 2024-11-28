@@ -49,78 +49,75 @@ document.addEventListener('DOMContentLoaded', () => {
 
     startButton.disabled = false;
 
-    let isDragging = false;
-    let startX = 0;
-    let startY = 0;
-
-    let touchMoves = [];
-    let delayTimeout = null;
+    let eventQueue = [];
+    let delay = 0;
 
     // 작업 시작
     startButton.addEventListener('click', () => {
         document.querySelector('.overlay').style.display = 'none'; // 오버레이 숨기기
         centerCircle.style.zIndex = 1;
+        delay = selectedOrder[currentTaskIndex % 6]; // 현재 작업의 delay 설정
+        console.log(`현재 delay: ${delay}ms`);
         startNextTask();
     });
 
     centerCircle.addEventListener('touchstart', (e) => {
         e.preventDefault(); // 기본 스크롤 동작 방지
-        isDragging = false; // 초기 상태에서 드래그 비활성화
-        touchMoves = []; // 이전 기록 초기화
-
-        const touch = e.touches[0];
-        startX = touch.clientX - centerCircle.offsetLeft;
-        startY = touch.clientY - centerCircle.offsetTop;
-
-        const delay = selectedOrder[currentTaskIndex % 6]; // delay 설정
-        console.log(`현재 delay: ${delay}ms`);
-
-        // 지연 시간 적용
-        delayTimeout = setTimeout(() => {
-            isDragging = true; // 지연 후 드래그 활성화
-            console.log("드래그 시작");
-            replayTouchMoves(); // 저장된 이동 경로 재생
-        }, delay);
+        eventQueue = []; // 이벤트 큐 초기화
+        queueEvent('start', e.touches[0]);
     });
 
     centerCircle.addEventListener('touchmove', (e) => {
-        const touch = e.touches[0];
-        const moveX = touch.clientX - startX;
-        const moveY = touch.clientY - startY;
-
-        if (!isDragging) {
-            touchMoves.push({ moveX, moveY }); // 지연 중에는 이동 경로 기록
-            return;
-        }
-
         e.preventDefault(); // 기본 스크롤 동작 방지
-        centerCircle.style.left = `${moveX}px`;
-        centerCircle.style.top = `${moveY}px`;
+        queueEvent('move', e.touches[0]);
     });
 
     centerCircle.addEventListener('touchend', (e) => {
-        if (delayTimeout) {
-            clearTimeout(delayTimeout); // delay 종료 시점 클리어
-        }
-
-        if (!isDragging) return;
-
-        isDragging = false;
         e.preventDefault(); // 기본 스크롤 동작 방지
+        queueEvent('end', e.changedTouches[0]);
+    });
 
-        const touch = e.changedTouches[0];
+    function queueEvent(type, touch) {
+        const event = {
+            type,
+            x: touch.clientX,
+            y: touch.clientY,
+            timestamp: Date.now(),
+        };
+        eventQueue.push(event);
+
+        setTimeout(() => {
+            processEvent(event);
+        }, delay);
+    }
+
+    function processEvent(event) {
+        switch (event.type) {
+            case 'start':
+                console.log("드래그 시작");
+                break;
+            case 'move':
+                centerCircle.style.left = `${event.x}px`;
+                centerCircle.style.top = `${event.y}px`;
+                break;
+            case 'end':
+                console.log("드래그 종료");
+                checkDropTarget(event.x, event.y);
+                break;
+        }
+    }
+
+    function checkDropTarget(x, y) {
         const currentTargetId = taskOrder[currentTaskIndex];
         const currentTarget = document.getElementById(currentTargetId);
 
         const targetRect = currentTarget.getBoundingClientRect();
-        const touchX = touch.clientX;
-        const touchY = touch.clientY;
 
         if (
-            touchX >= targetRect.left &&
-            touchX <= targetRect.right &&
-            touchY >= targetRect.top &&
-            touchY <= targetRect.bottom
+            x >= targetRect.left &&
+            x <= targetRect.right &&
+            y >= targetRect.top &&
+            y <= targetRect.bottom
         ) {
             console.log(`${currentTargetId}에 성공적으로 드롭되었습니다.`);
             currentTaskIndex++;
@@ -128,23 +125,6 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             alert("잘못된 타겟입니다! 올바른 타겟으로 드롭하세요.");
         }
-    });
-
-    function replayTouchMoves() {
-        let i = 0;
-
-        function animate() {
-            if (i >= touchMoves.length) return;
-
-            const { moveX, moveY } = touchMoves[i];
-            centerCircle.style.left = `${moveX}px`;
-            centerCircle.style.top = `${moveY}px`;
-
-            i++;
-            requestAnimationFrame(animate);
-        }
-
-        animate();
     }
 
     function startNextTask() {
