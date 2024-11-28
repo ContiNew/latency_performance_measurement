@@ -6,8 +6,8 @@ const message = overlay.querySelector('.message');
 let currentTarget = null;
 
 // 초기 설정 변수
-const delays = [0, 20, 40, 60, 80, 100];
 const latinSquare = [
+    [0, 20, 40, 60, 80, 100], // 첫 번째 행 수정: 유효한 딜레이 값 추가
     [0, 20, 100, 40, 80, 60],
     [20, 40, 0, 60, 100, 80],
     [40, 60, 20, 80, 0, 100],
@@ -20,14 +20,23 @@ let selectedOrder = [];
 let trialQueue = [];
 let currentTrialIndex = 0;
 
-// 움직임 딜레이 설정
-let moveQueue = [];
-let isProcessingQueue = false;
-
 // 실험 시작 버튼 클릭
 startButton.addEventListener('click', () => {
-    overlay.style.display = 'none';
-    startNextTrial();
+    const userOrder = parseInt(prompt('라틴 스퀘어 순서를 입력하세요 (0~6):'), 10);
+
+    if (isNaN(userOrder) || userOrder < 0 || userOrder >= latinSquare.length) {
+        alert('올바른 숫자를 입력하세요 (0~6).');
+        return;
+    }
+
+    // 라틴 스퀘어 순서 설정
+    selectedOrder = latinSquare[userOrder];
+
+    // 트라이얼 준비
+    setupTrials();
+    currentTrialIndex = 0; // 트라이얼 인덱스 초기화
+    overlay.style.display = 'none'; // 오버레이 숨기기
+    startNextTrial(); // 첫 트라이얼 시작
 });
 
 // 8개의 타겟과 딜레이를 조합하여 24번의 실험 준비
@@ -35,6 +44,7 @@ function setupTrials() {
     const targets = Array.from(targetCircles);
     const repetitions = 3;
 
+    trialQueue = []; // 트라이얼 큐 초기화
     for (let i = 0; i < repetitions; i++) {
         const shuffledTargets = shuffleArray(targets); // 타겟 순서를 랜덤으로 섞음
         shuffledTargets.forEach((target) => {
@@ -58,6 +68,15 @@ function startNextTrial() {
         return;
     }
 
+    // 현재 트라이얼 가져오기
+    const currentTrial = trialQueue[currentTrialIndex];
+    currentTarget = currentTrial.target;
+
+    // 타겟 강조
+    highlightTarget(currentTarget);
+
+    console.log(`Trial ${currentTrialIndex + 1}: Target=${currentTarget.id}, Delay=${currentTrial.delay}ms`);
+
     currentTrialIndex++;
 }
 
@@ -74,6 +93,12 @@ function resetCenterCirclePosition() {
     centerCircle.style.top = '50%';
     centerCircle.style.transform = 'translate(-50%, -50%)';
     centerCircle.style.zIndex = '0';
+}
+
+// 타겟 강조
+function highlightTarget(target) {
+    targetCircles.forEach((circle) => circle.classList.remove('highlight'));
+    target.classList.add('highlight');
 }
 
 // 터치 동작 지원
