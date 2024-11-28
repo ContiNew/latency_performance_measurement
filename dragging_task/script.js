@@ -77,6 +77,7 @@ document.addEventListener('DOMContentLoaded', () => {
         queueEvent('end', e.changedTouches[0]);
     });
 
+    // touch 이벤트 기록
     function queueEvent(type, touch) {
         const event = {
             type,
@@ -85,7 +86,7 @@ document.addEventListener('DOMContentLoaded', () => {
             timestamp: Date.now(),
         };
         eventQueue.push(event);
-
+        dragEvents.push(event); // 기록 저장
         setTimeout(() => {
             processEvent(event);
         }, delay);
@@ -106,25 +107,55 @@ document.addEventListener('DOMContentLoaded', () => {
                 break;
         }
     }
+    // 이벤트 큐와 CSV 저장 함수 추가
+    let dragEvents = [];
+    function saveDragData(targetName, delay, currentTaskIndex, events, centerX, centerY, targetX, targetY, totalTime) {
+        const rows = events.map(event => `${event.type},${event.x},${event.y},${event.timestamp}`);
+        const csvHeader = "Type,X,Y,Timestamp";
+        const summary = `End_Center_X,End_Center_Y,Target_Center_X,Target_Center_Y,Total_Time\n${centerX},${centerY},${targetX},${targetY},${totalTime}`;
+        const csvContent = `${csvHeader}\n${rows.join("\n")}\n\n${summary}`;
+        const filename = `${targetName}_${delay}_${currentTaskIndex}.csv`;
 
+        const blob = new Blob([csvContent], { type: "text/csv" });
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+
+    // checkDropTarget 함수 수정
     function checkDropTarget(x, y) {
         const currentTargetId = taskOrder[currentTaskIndex];
         const currentTarget = document.getElementById(currentTargetId);
 
         const targetRect = currentTarget.getBoundingClientRect();
+        const targetX = (targetRect.left + targetRect.right) / 2;
+        const targetY = (targetRect.top + targetRect.bottom) / 2;
 
-        if (
-            x >= targetRect.left &&
-            x <= targetRect.right &&
-            y >= targetRect.top &&
-            y <= targetRect.bottom
-        ) {
-            console.log(`${currentTargetId}에 성공적으로 드롭되었습니다.`);
-            currentTaskIndex++;
-            startNextTask();
-        } else {
-            alert("잘못된 타겟입니다! 올바른 타겟으로 드롭하세요.");
-        }
+        const endTime = Date.now();
+        const totalTime = endTime - dragEvents[0].timestamp;
+
+        // centerCircle 중심 계산
+        const centerX = x;
+        const centerY = y;
+
+        // CSV 저장
+        saveDragData(
+            currentTargetId,
+            delay,
+            currentTaskIndex,
+            dragEvents,
+            centerX,
+            centerY,
+            targetX,
+            targetY,
+            totalTime
+        );
+
+        currentTaskIndex++;
+        startNextTask();
     }
 
     function startNextTask() {
