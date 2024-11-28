@@ -3,7 +3,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const targetInfo = document.getElementById("targetDiv");
     const currentTrialElement = document.getElementById("currentTrial");
 
-    const responseDelays = [0, 12.5, 25, 50, 75, 100];
+    const responseDelays = [0, 20, 40, 60, 80, 100];
     const totalTrialsPerCombination = 3;
     const validSections = [...sections].filter((_, index) => index !== 3); // START POINT 제외
     const maxTrials = validSections.length * responseDelays.length * totalTrialsPerCombination;
