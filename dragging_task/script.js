@@ -3,9 +3,12 @@ const centerCircle = document.getElementById('centerCircle');
 const targetCircles = document.querySelectorAll('.cornerCircle');
 const startButton = document.getElementById('startButton');
 const overlay = document.querySelector('.overlay');
-const message = overlay.querySelector('.message');
 let trialQueue = [];
 let currentTrialIndex = 0;
+let isTouchActive = false; // 터치 활성 상태
+let touchStartX = 0; // 터치 시작 X좌표
+let touchStartY = 0; // 터치 시작 Y좌표
+let selectedOrder = [];
 
 // Latin Square 배열 정의
 const latinSquare = [
@@ -17,15 +20,12 @@ const latinSquare = [
     [100, 0, 80, 20, 60, 40],
 ];
 
-let selectedOrder = [];
-
 // 페이지 로드 시 Latin Square 순서 입력
 window.addEventListener('DOMContentLoaded', () => {
     while (true) {
         const userOrder = prompt('라틴 스퀘어 순서를 입력하세요 (1~6):');
         if (userOrder && !isNaN(userOrder) && userOrder >= 1 && userOrder <= 6) {
             selectedOrder = latinSquare[userOrder - 1];
-            alert(`선택한 라틴 스퀘어 순서: ${selectedOrder.join(', ')}`);
             overlay.style.display = 'flex'; // 시작 버튼 화면 표시
             break;
         } else {
@@ -43,14 +43,13 @@ startButton.addEventListener('click', () => {
 
 // 트라이얼 설정 함수
 function setupTrials() {
-    trialQueue = []; // 기존 트라이얼 초기화
+    trialQueue = [];
     const repetitions = 3;
 
-    // 각 타겟이 3번씩 등장하도록 설정
     for (let i = 0; i < repetitions; i++) {
-        const shuffledTargets = shuffleArray(Array.from(targetCircles)); // 타겟 순서를 랜덤으로 섞음
+        const shuffledTargets = shuffleArray(Array.from(targetCircles));
         shuffledTargets.forEach((target) => {
-            const delay = selectedOrder[trialQueue.length % selectedOrder.length]; // 딜레이 결정
+            const delay = selectedOrder[trialQueue.length % selectedOrder.length];
             trialQueue.push({ target, delay });
         });
     }
@@ -69,69 +68,64 @@ function startNextTrial() {
     }
 
     const { target, delay } = trialQueue[currentTrialIndex];
-    console.log(`Trial ${currentTrialIndex + 1}: Target = ${target.id}, Delay = ${delay}ms`);
+    highlightTarget(target);
 
-    // 딜레이 설정 후 사용자 입력 대기
-    processTargetWithDelay(target, delay);
+    // 딜레이를 터치 입력과 움직임 사이에 적용
+    centerCircle.addEventListener('touchend', (e) => {
+        e.preventDefault();
+        setTimeout(() => moveCircle(target), delay);
+        removeTargetHighlight(target); // 터치가 끝나면 강조 제거
+        startNextTrial(); // 다음 트라이얼로 이동
+    }, { once: true });
 
     currentTrialIndex++;
 }
 
-// 딜레이를 적용하여 타겟을 처리
-function processTargetWithDelay(target, delay) {
-    setTimeout(() => {
-        alert(`다음 목표: ${target.id}`);
-        // 타겟 강조 표시
-        target.classList.add('highlight');
+// 타겟 강조 함수
+function highlightTarget(target) {
+    target.classList.add('highlight');
+}
 
-        // 일정 시간이 지나면 강조 제거
-        setTimeout(() => target.classList.remove('highlight'), 500);
-    }, delay);
+// 타겟 강조 제거 함수
+function removeTargetHighlight(target) {
+    target.classList.remove('highlight');
+}
+
+// 원 이동 함수
+function moveCircle(target) {
+    const rect = target.getBoundingClientRect();
+    centerCircle.style.position = 'absolute';
+    centerCircle.style.left = `${rect.left + rect.width / 2}px`;
+    centerCircle.style.top = `${rect.top + rect.height / 2}px`;
 }
 
 // 실험 종료 처리
 function endExperiment() {
     overlay.style.display = 'flex';
-    message.textContent = '실험이 완료되었습니다!';
-}
-
-// 원을 정중앙으로 이동시키는 함수
-function resetCenterCirclePosition() {
-    centerCircle.style.position = 'absolute';
-    centerCircle.style.left = '50%';
-    centerCircle.style.top = '50%';
-    centerCircle.style.transform = 'translate(-50%, -50%)';
-    centerCircle.style.zIndex = '0';
+    overlay.querySelector('.message').textContent = '실험이 완료되었습니다!';
 }
 
 // 터치 동작 지원
 centerCircle.addEventListener('touchstart', (e) => {
-    e.preventDefault();
+    isTouchActive = true;
     const touch = e.touches[0];
-
-    const circleRect = centerCircle.getBoundingClientRect();
-    offsetX = touch.clientX - circleRect.left;
-    offsetY = touch.clientY - circleRect.top;
-
-    centerCircle.style.zIndex = '1';
+    touchStartX = touch.clientX;
+    touchStartY = touch.clientY;
 });
 
 centerCircle.addEventListener('touchmove', (e) => {
-    e.preventDefault();
+    if (!isTouchActive) return;
     const touch = e.touches[0];
+    const deltaX = touch.clientX - touchStartX;
+    const deltaY = touch.clientY - touchStartY;
 
-    centerCircle.style.left = `${touch.clientX - offsetX}px`;
-    centerCircle.style.top = `${touch.clientY - offsetY}px`;
-    centerCircle.style.transform = 'none';
+    centerCircle.style.left = `${centerCircle.offsetLeft + deltaX}px`;
+    centerCircle.style.top = `${centerCircle.offsetTop + deltaY}px`;
+
+    touchStartX = touch.clientX;
+    touchStartY = touch.clientY;
 });
 
-centerCircle.addEventListener('touchend', (e) => {
-    e.preventDefault();
-
-    // 터치 입력 종료 후 정중앙으로 이동
-    resetCenterCirclePosition();
-
-    // 오버레이 활성화
-    overlay.style.display = 'flex';
-    message.textContent = '준비되시면 시작 버튼을 눌러주세요.';
+centerCircle.addEventListener('touchend', () => {
+    isTouchActive = false;
 });
