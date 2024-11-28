@@ -7,7 +7,7 @@ let currentTarget = null;
 
 // 초기 설정 변수
 const latinSquare = [
-    [0, 20, 40, 60, 80, 100], // 첫 번째 행 수정
+    [0, 20, 40, 60, 80, 100],
     [0, 20, 100, 40, 80, 60],
     [20, 40, 0, 60, 100, 80],
     [40, 60, 20, 80, 0, 100],
@@ -22,7 +22,7 @@ let currentTrialIndex = 0;
 
 // 실험 시작 버튼 클릭
 startButton.addEventListener('click', () => {
-    if (trialQueue.length === 0) { // 라틴 스퀘어 순서가 아직 설정되지 않았다면
+    if (trialQueue.length === 0) {
         const userOrder = parseInt(prompt('라틴 스퀘어 순서를 입력하세요 (0~6):'), 10);
 
         if (isNaN(userOrder) || userOrder < 0 || userOrder >= latinSquare.length) {
@@ -46,12 +46,15 @@ function setupTrials() {
     const repetitions = 3;
 
     trialQueue = []; // 트라이얼 큐 초기화
+
     for (let i = 0; i < repetitions; i++) {
-        const shuffledTargets = shuffleArray(targets); // 타겟 순서를 랜덤으로 섞음
-        shuffledTargets.forEach((target) => {
+        const shuffledTargets = shuffleArray([...targets]); // 타겟 순서를 랜덤으로 섞음
+        const shuffledDelays = shuffleArray([...selectedOrder]); // 딜레이 순서를 랜덤으로 섞음
+
+        shuffledTargets.forEach((target, index) => {
             trialQueue.push({
                 target: target,
-                delay: selectedOrder[trialQueue.length % selectedOrder.length],
+                delay: shuffledDelays[index % shuffledDelays.length], // 섞인 딜레이 적용
             });
         });
     }
