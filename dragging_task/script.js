@@ -5,10 +5,10 @@ const startButton = document.getElementById('startButton');
 const overlay = document.querySelector('.overlay');
 let trialQueue = [];
 let currentTrialIndex = 0;
-let isTouchActive = false; // 터치 활성 상태
-let touchStartX = 0; // 터치 시작 X좌표
-let touchStartY = 0; // 터치 시작 Y좌표
+let moveQueue = [];
+let isProcessingQueue = false;
 let selectedOrder = [];
+let moveDelay = 0; // 딜레이는 각 트라이얼에서 설정
 
 // Latin Square 배열 정의
 const latinSquare = [
@@ -68,17 +68,45 @@ function startNextTrial() {
     }
 
     const { target, delay } = trialQueue[currentTrialIndex];
+    moveDelay = delay; // 현재 트라이얼의 딜레이 설정
     highlightTarget(target);
 
-    // 딜레이를 터치 입력과 움직임 사이에 적용
+    // 터치 종료 시 동작 설정
     centerCircle.addEventListener('touchend', (e) => {
         e.preventDefault();
-        setTimeout(() => moveCircle(target), delay);
-        removeTargetHighlight(target); // 터치가 끝나면 강조 제거
+        const rect = target.getBoundingClientRect();
+        moveQueue.push({
+            left: rect.left + rect.width / 2,
+            top: rect.top + rect.height / 2,
+        });
+        processMoveQueue(); // 움직임 딜레이 처리
+        resetCenterCirclePosition(); // 원을 정중앙으로 이동
+        removeTargetHighlight(target); // 타겟 강조 제거
         startNextTrial(); // 다음 트라이얼로 이동
     }, { once: true });
 
     currentTrialIndex++;
+}
+
+// 움직임 딜레이 처리
+function processMoveQueue() {
+    if (isProcessingQueue || moveQueue.length === 0) return;
+
+    isProcessingQueue = true;
+
+    const move = moveQueue.shift();
+
+    setTimeout(() => {
+        centerCircle.style.position = 'absolute';
+        centerCircle.style.left = `${move.left}px`;
+        centerCircle.style.top = `${move.top}px`;
+        centerCircle.style.transform = 'none';
+
+        isProcessingQueue = false;
+        if (moveQueue.length > 0) {
+            processMoveQueue();
+        }
+    }, moveDelay);
 }
 
 // 타겟 강조 함수
@@ -91,12 +119,13 @@ function removeTargetHighlight(target) {
     target.classList.remove('highlight');
 }
 
-// 원 이동 함수
-function moveCircle(target) {
-    const rect = target.getBoundingClientRect();
+// 원을 정중앙으로 이동시키는 함수
+function resetCenterCirclePosition() {
     centerCircle.style.position = 'absolute';
-    centerCircle.style.left = `${rect.left + rect.width / 2}px`;
-    centerCircle.style.top = `${rect.top + rect.height / 2}px`;
+    centerCircle.style.left = '50%';
+    centerCircle.style.top = '50%';
+    centerCircle.style.transform = 'translate(-50%, -50%)';
+    centerCircle.style.zIndex = '0';
 }
 
 // 실험 종료 처리
@@ -107,25 +136,19 @@ function endExperiment() {
 
 // 터치 동작 지원
 centerCircle.addEventListener('touchstart', (e) => {
-    isTouchActive = true;
-    const touch = e.touches[0];
-    touchStartX = touch.clientX;
-    touchStartY = touch.clientY;
+    e.preventDefault();
 });
 
 centerCircle.addEventListener('touchmove', (e) => {
-    if (!isTouchActive) return;
+    e.preventDefault();
     const touch = e.touches[0];
-    const deltaX = touch.clientX - touchStartX;
-    const deltaY = touch.clientY - touchStartY;
+    const deltaX = touch.clientX - centerCircle.offsetLeft;
+    const deltaY = touch.clientY - centerCircle.offsetTop;
 
     centerCircle.style.left = `${centerCircle.offsetLeft + deltaX}px`;
     centerCircle.style.top = `${centerCircle.offsetTop + deltaY}px`;
-
-    touchStartX = touch.clientX;
-    touchStartY = touch.clientY;
 });
 
-centerCircle.addEventListener('touchend', () => {
-    isTouchActive = false;
+centerCircle.addEventListener('touchend', (e) => {
+    e.preventDefault();
 });
