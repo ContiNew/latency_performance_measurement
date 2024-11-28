@@ -8,7 +8,6 @@ let currentTarget = null;
 // 초기 설정 변수
 const delays = [0, 20, 40, 60, 80, 100];
 const latinSquare = [
-    [0, 0, 0, 0, 0, 0],
     [0, 20, 100, 40, 80, 60],
     [20, 40, 0, 60, 100, 80],
     [40, 60, 20, 80, 0, 100],
@@ -22,19 +21,19 @@ let trialQueue = [];
 let currentTrialIndex = 0;
 
 // 움직임 딜레이 설정
-const moveDelay = 100;
+let moveDelay = 0;
 let moveQueue = [];
 let isProcessingQueue = false;
 
 // 실험 시작 버튼 클릭
 startButton.addEventListener('click', () => {
     const userOrder = prompt('라틴 스퀘어 순서를 입력하세요 (1~6):');
-    if (!userOrder || isNaN(userOrder) || userOrder < 0 || userOrder > 6) {
+    if (!userOrder || isNaN(userOrder) || userOrder < 1 || userOrder > 6) {
         alert('올바른 숫자를 입력하세요 (1~6).');
         return;
     }
 
-    selectedOrder = latinSquare[userOrder];
+    selectedOrder = latinSquare[userOrder - 1];
     setupTrials();
     overlay.style.display = 'none';
     startNextTrial();
@@ -68,15 +67,25 @@ function startNextTrial() {
         return;
     }
 
+    // 현재 트라이얼 가져오기
     const currentTrial = trialQueue[currentTrialIndex];
     currentTarget = currentTrial.target;
 
-    // 강조 및 딜레이 설정
-    highlightTarget(currentTarget);
-    const delay = currentTrial.delay;
-    message.textContent = `타겟: ${currentTarget.id}, 딜레이: ${delay}ms`;
+    // 딜레이 값을 moveDelay에 적용
+    moveDelay = currentTrial.delay;
 
-    console.log(`Trial ${currentTrialIndex + 1}: Target=${currentTarget.id}, Delay=${delay}ms`);
+    // 오버레이 표시 후 일정 시간 대기
+    overlay.style.display = 'flex';
+    message.textContent = `타겟: ${currentTarget.id}, 딜레이: ${moveDelay}ms`;
+
+    console.log(`Trial ${currentTrialIndex + 1}: Target=${currentTarget.id}, Delay=${moveDelay}ms`);
+
+    setTimeout(() => {
+        overlay.style.display = 'none';
+        highlightTarget(currentTarget);
+    }, 1000); // 1초 후 오버레이 숨김
+
+    currentTrialIndex++;
 }
 
 // 실험 종료 처리
@@ -118,10 +127,8 @@ centerCircle.addEventListener('touchmove', (e) => {
 
 centerCircle.addEventListener('touchend', (e) => {
     e.preventDefault();
-    // 다음 트라이얼로 넘어가기
     if (currentTarget) {
         currentTarget.classList.remove('highlight');
-        currentTrialIndex++;
         startNextTrial();
     }
 });
