@@ -21,7 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
             console.log("선택된 Latin Square 순서:", selectedOrder);
             isValidInput = true;
         } else {
-            // alert("유효하지 않은 입력입니다. 1부터 6 사이의 숫자를 입력하세요.");
+            alert("유효하지 않은 입력입니다. 1부터 6 사이의 숫자를 입력하세요.");
         }
     }
 
@@ -48,9 +48,13 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log("랜덤 작업 순서:", taskOrder);
 
     startButton.disabled = false;
+
     let isDragging = false;
     let startX = 0;
     let startY = 0;
+
+    let touchStartTime = 0;
+    let touchMoves = [];
 
     // 작업 시작
     startButton.addEventListener('click', () => {
@@ -59,37 +63,62 @@ document.addEventListener('DOMContentLoaded', () => {
         startNextTask();
     });
 
-
     centerCircle.addEventListener('touchstart', (e) => {
         e.preventDefault(); // 기본 스크롤 동작 방지
+        touchStartTime = Date.now();
+        touchMoves = []; // 이전 기록 초기화
 
         const delay = selectedOrder[currentTaskIndex % 6]; // delay 설정
         console.log(`현재 delay: ${delay}ms`);
 
-        // 1. 터치 시작 후 지연 시간 설정
+        // 터치 시작 정보 기록
+        const touch = e.touches[0];
+        startX = touch.clientX - centerCircle.offsetLeft;
+        startY = touch.clientY - centerCircle.offsetTop;
+
+        // 이동 기록 시작
+        document.addEventListener('touchmove', recordTouchMove);
         setTimeout(() => {
             isDragging = true;
-
-            const touch = e.touches[0];
-            startX = touch.clientX - centerCircle.offsetLeft;
-            startY = touch.clientY - centerCircle.offsetTop;
-
             console.log("드래그 시작");
+            replayTouchMoves();
         }, delay);
     });
 
-    document.addEventListener('touchmove', (e) => {
-        if (!isDragging) return;
-
-        e.preventDefault(); // 기본 스크롤 동작 방지
-
+    function recordTouchMove(e) {
         const touch = e.touches[0];
-        const moveX = touch.clientX - startX;
-        const moveY = touch.clientY - startY;
+        const moveX = touch.clientX;
+        const moveY = touch.clientY;
+        const timestamp = Date.now() - touchStartTime;
+        touchMoves.push({ moveX, moveY, timestamp });
+    }
 
-        centerCircle.style.left = `${moveX}px`;
-        centerCircle.style.top = `${moveY}px`;
-    });
+    function replayTouchMoves() {
+        if (touchMoves.length === 0) return;
+
+        const startTime = Date.now();
+        let i = 0;
+
+        function animate() {
+            if (i >= touchMoves.length) {
+                document.removeEventListener('touchmove', recordTouchMove);
+                return;
+            }
+
+            const { moveX, moveY, timestamp } = touchMoves[i];
+            const elapsedTime = Date.now() - startTime;
+
+            if (elapsedTime >= timestamp) {
+                centerCircle.style.left = `${moveX}px`;
+                centerCircle.style.top = `${moveY}px`;
+                i++;
+            }
+
+            requestAnimationFrame(animate);
+        }
+
+        animate();
+    }
 
     document.addEventListener('touchend', (e) => {
         if (!isDragging) return;
@@ -115,7 +144,7 @@ document.addEventListener('DOMContentLoaded', () => {
             currentTaskIndex++;
             startNextTask();
         } else {
-            // alert("잘못된 타겟입니다! 올바른 타겟으로 드롭하세요.");
+            alert("잘못된 타겟입니다! 올바른 타겟으로 드롭하세요.");
         }
     });
 
