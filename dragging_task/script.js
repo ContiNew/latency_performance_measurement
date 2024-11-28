@@ -1,15 +1,14 @@
-// Latin Square 배열
-const latinSquare = [
-    [0, 20, 100, 40, 80, 60],
-    [20, 40, 0, 60, 100, 80],
-    [40, 60, 20, 80, 0, 100],
-    [60, 80, 40, 100, 20, 0],
-    [80, 100, 60, 0, 40, 20],
-    [100, 0, 80, 20, 60, 40],
-];
-
-// 페이지 로드 시 작업 초기화
 document.addEventListener('DOMContentLoaded', () => {
+    // Latin Square 배열
+    const latinSquare = [
+        [0, 20, 100, 40, 80, 60],
+        [20, 40, 0, 60, 100, 80],
+        [40, 60, 20, 80, 0, 100],
+        [60, 80, 40, 100, 20, 0],
+        [80, 100, 60, 0, 40, 20],
+        [100, 0, 80, 20, 60, 40],
+    ];
+
     let isValidInput = false;
     let selectedOrder = null;
 
@@ -72,28 +71,57 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log(`현재 작업: ${currentTargetId}로 이동`);
     }
 
-    // 드래그 앤 드롭 이벤트 설정
-    centerCircle.addEventListener('dragstart', (e) => {
-        e.dataTransfer.setData("text/plain", "centerCircle");
+    // 터치 이동 변수
+    let isDragging = false;
+    let startX = 0;
+    let startY = 0;
+
+    // 터치 이벤트 등록
+    centerCircle.addEventListener('touchstart', (e) => {
+        isDragging = true;
+        const touch = e.touches[0];
+        startX = touch.clientX - centerCircle.offsetLeft;
+        startY = touch.clientY - centerCircle.offsetTop;
     });
 
-    allTargets.forEach(target => {
-        target.addEventListener('dragover', (e) => {
-            e.preventDefault(); // 드롭 가능하도록 설정
-        });
+    document.addEventListener('touchmove', (e) => {
+        if (!isDragging) return;
 
-        target.addEventListener('drop', (e) => {
-            e.preventDefault();
-            const draggedId = e.dataTransfer.getData("text/plain");
+        const touch = e.touches[0];
+        const moveX = touch.clientX - startX;
+        const moveY = touch.clientY - startY;
 
-            if (draggedId === "centerCircle" && target.id === taskOrder[currentTaskIndex]) {
-                console.log(`${target.id}에 성공적으로 드롭되었습니다.`);
-                currentTaskIndex++;
-                startNextTask();
-            } else {
-                alert("잘못된 타겟입니다! 올바른 타겟으로 드롭하세요.");
-            }
-        });
+        // centerCircle 이동
+        centerCircle.style.left = `${moveX}px`;
+        centerCircle.style.top = `${moveY}px`;
+    });
+
+    document.addEventListener('touchend', (e) => {
+        if (!isDragging) return;
+        isDragging = false;
+
+        // 현재 위치와 타겟 위치 비교
+        const touch = e.changedTouches[0];
+        const currentTargetId = taskOrder[currentTaskIndex];
+        const currentTarget = document.getElementById(currentTargetId);
+
+        const targetRect = currentTarget.getBoundingClientRect();
+        const touchX = touch.clientX;
+        const touchY = touch.clientY;
+
+        // 타겟 영역 확인
+        if (
+            touchX >= targetRect.left &&
+            touchX <= targetRect.right &&
+            touchY >= targetRect.top &&
+            touchY <= targetRect.bottom
+        ) {
+            console.log(`${currentTargetId}에 성공적으로 드롭되었습니다.`);
+            currentTaskIndex++;
+            startNextTask();
+        } else {
+            alert("잘못된 타겟입니다! 올바른 타겟으로 드롭하세요.");
+        }
     });
 
     // 배열 섞기 유틸리티 함수
