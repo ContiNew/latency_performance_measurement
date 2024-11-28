@@ -48,47 +48,37 @@ document.addEventListener("DOMContentLoaded", function () {
             goToResults();
             return;
         }
-    
-        // 라틴 스퀘어 순서를 세션 스토리지에서 가져옴
-        const latinSquareOrder = JSON.parse(sessionStorage.getItem("currentLatinOrder"));
-        if (!latinSquareOrder) {
-            alert("라틴 스퀘어 순서가 설정되지 않았습니다. 이전 페이지를 확인하세요.");
-            return;
-        }
-    
-        // 현재 트라이얼에 해당하는 라틴 스퀘어의 지연 시간 인덱스 가져오기
-        const trialIndex = (currentTrial - 1) % latinSquareOrder.length; // 순환적으로 인덱스를 사용
-        delayIndex = latinSquareOrder[trialIndex]; // 라틴 스퀘어에 따른 지연 시간 인덱스
-    
+
         do {
             targetDivIndex = Math.floor(Math.random() * validSections.length);
+            delayIndex = Math.floor(Math.random() * responseDelays.length);
+
             const key = `${targetDivIndex}-${responseDelays[delayIndex]}`;
             if (!trialCounts[key]) trialCounts[key] = 0;
         } while (
             trialCounts[`${targetDivIndex}-${responseDelays[delayIndex]}`] >=
             totalTrialsPerCombination
         );
-    
+
         const trialKey = `${targetDivIndex}-${responseDelays[delayIndex]}`;
         trialCounts[trialKey]++;
-    
+
         const delay = responseDelays[delayIndex];
         actualDivNumber = targetDivIndex < 3 ? targetDivIndex + 1 : targetDivIndex + 2;
-    
+
         targetInfo.textContent = `DIV ${actualDivNumber}, 지연시간 ${delay} ms`;
         currentTrialElement.textContent = currentTrial;
-    
+
         console.log(`트라이얼 ${currentTrial}: DIV ${actualDivNumber}, 지연시간 ${delay} ms`);
-    
+
         notifyUser(actualDivNumber);
-    
+
         window.scrollTo({ top: sections[3].offsetTop, behavior: "smooth" });
-    
+
         trialStartTime = Date.now();
         scrollCount = 0;
         currentTrial++;
     }
-    
 
     function notifyUser(divNumber) {
         alert(`다음 목표: DIV ${divNumber}로 이동하세요!`);

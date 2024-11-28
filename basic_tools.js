@@ -1,13 +1,47 @@
 
 document.addEventListener("DOMContentLoaded", function () {
-    // 라틴 스퀘어 생성 함수
-    function generateLatinSquare(size) {
+    function balancedLatinSquare(array, participantId) {
+        result = [];
+        // Based on "Bradley, J. V. Complete counterbalancing of immediate sequential effects in a Latin square design. J. Amer. Statist. Ass.,.1958, 53, 525-528. "
+        for (var i = 0, j = 0, h = 0; i < array.length; ++i) {
+            var val = 0;
+            if (i < 2 || i % 2 != 0) {
+                val = j++;
+            } else {
+                val = array.length - h - 1;
+                ++h;
+            }
+    
+            var idx = (val + participantId) % array.length;
+            result.push(array[idx]);
+        }
+    
+        if (array.length % 2 != 0 && participantId % 2 != 0) {
+            result = result.reverse();
+        }
+    
+        return result;
+    }
+
+    function generateBalancedLatinSquare(size) {
+        if (size <= 0) {
+            throw new Error("Size must be greater than 0");
+        }
         const square = [];
-        for (let i = 0; i < size; i++) {
-            square.push([...Array(size).keys()].map(j => (j + i) % size));
+        const arr = Array.from({ length: size }, (_, index) => index)
+        if (size%2 == 0){
+            for(let i = 0; i<size; i++){
+                square.push(balancedLatinSquare(arr,i))
+            }
+        }
+        if (size%2 != 0){
+            for(let i = 0; i<size*2; i++){
+                square.push(balancedLatinSquare(arr,i))
+            }
         }
         return square;
     }
+    
 
     // 이전 트라이얼 순서를 로컬 스토리지에서 가져오기
     function getPreviousLatinIndex() {
@@ -31,8 +65,8 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     // 라틴 스퀘어 설정 및 다음 순서 저장
-    const conditionSize = 5; // 0ms ~ 200ms -> 5개의 조건
-    const latinSquare = generateLatinSquare(conditionSize);
+    const conditionSize = 6; // 0ms ~ 200ms -> 5개의 조건
+    const latinSquare = generateBalancedLatinSquare(conditionSize);
 
     // 이전 인덱스 가져오기
     const previousIndex = getPreviousLatinIndex(conditionSize);
@@ -40,6 +74,7 @@ document.addEventListener("DOMContentLoaded", function () {
     // 현재 실험에서 사용할 순서 계산
     const currentOrder = latinSquare[previousIndex];
     console.log("현재 라틴 스퀘어 순서:", currentOrder);
+    console.log(latinSquare)
 
     // 다음 인덱스 계산 후 저장
     saveNextLatinIndex(previousIndex, conditionSize);

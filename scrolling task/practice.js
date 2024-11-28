@@ -4,7 +4,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const currentTrialElement = document.getElementById("currentTrial");
 
     const responseDelays = [0]; // 응답 지연 시간
-    const totalTrialsPerCombination = 2; // 같은 DIV-지연시간 조합당 최대 트라이얼 횟수
+    const totalTrialsPerCombination = 1; // 같은 DIV-지연시간 조합당 최대 트라이얼 횟수
     const validSections = [...sections].filter((_, index) => index !== 3); // START POINT 제외
     const maxTrials = validSections.length * responseDelays.length * totalTrialsPerCombination; // 총 트라이얼 수
 
