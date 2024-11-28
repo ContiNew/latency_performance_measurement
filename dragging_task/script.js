@@ -10,6 +10,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let isValidInput = false;
     let selectedOrder = null;
+    let initialX = 0;
+    let initialY = 0;
 
     // Latin Square 입력
     while (!isValidInput) {
@@ -64,6 +66,11 @@ document.addEventListener('DOMContentLoaded', () => {
     centerCircle.addEventListener('touchstart', (e) => {
         e.preventDefault(); // 기본 스크롤 동작 방지
         eventQueue = []; // 이벤트 큐 초기화
+
+        const centerRect = centerCircle.getBoundingClientRect();
+        initialX = (centerRect.left + centerRect.right) / 2;
+        initialY = (centerRect.top + centerRect.bottom) / 2;
+
         queueEvent('start', e.touches[0]);
     });
 
@@ -109,10 +116,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     // 이벤트 큐와 CSV 저장 함수 추가
     let dragEvents = [];
-    function saveDragData(targetName, delay, currentTaskIndex, events, centerX, centerY, targetX, targetY, totalTime) {
+    function saveDragData(targetName, delay, currentTaskIndex, events, centerX, centerY, targetX, targetY, initialX, initialY, totalTime) {
         const rows = events.map(event => `${event.type},${event.x},${event.y},${event.timestamp}`);
         const csvHeader = "Type,X,Y,Timestamp";
-        const summary = `End_Center_X,End_Center_Y,Target_Center_X,Target_Center_Y,Total_Time\n${centerX},${centerY},${targetX},${targetY},${totalTime}`;
+        const summary = `End_Center_X,End_Center_Y,Target_Center_X,Target_Center_Y,initial_X,initial_Y,Total_Time\n${centerX},${centerY},${targetX},${targetY},${initialX},${initialY},${totalTime}`;
         const csvContent = `${csvHeader}\n${rows.join("\n")}\n\n${summary}`;
         const filename = `${targetName}_${delay}_${currentTaskIndex}.csv`;
 
@@ -151,6 +158,8 @@ document.addEventListener('DOMContentLoaded', () => {
             centerY,
             targetX,
             targetY,
+            initialX,
+            initialY,
             totalTime
         );
 
