@@ -61,14 +61,23 @@ document.addEventListener('DOMContentLoaded', () => {
             alert("모든 작업이 완료되었습니다!");
             return;
         }
-
+    
         // 현재 타겟 하이라이트
         const currentTargetId = taskOrder[currentTaskIndex];
         const currentTarget = document.getElementById(currentTargetId);
         allTargets.forEach(target => target.classList.remove('highlight'));
         currentTarget.classList.add('highlight');
-
+    
         console.log(`현재 작업: ${currentTargetId}로 이동`);
+    
+        // centerCircle 위치 리셋
+        resetCenterCirclePosition();
+    }
+    
+    function resetCenterCirclePosition() {
+        centerCircle.style.left = "50%";
+        centerCircle.style.top = "50%";
+        centerCircle.style.transform = "translate(-50%, -50%)";
     }
 
     // 터치 이동 변수
