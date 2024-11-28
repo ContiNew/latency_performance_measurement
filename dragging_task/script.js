@@ -22,6 +22,7 @@ let currentTrialIndex = 0;
 
 // 실험 시작 버튼 클릭
 startButton.addEventListener('click', () => {
+    // 설정이 한 번만 실행되도록 조건 추가
     if (trialQueue.length === 0) {
         const userOrder = parseInt(prompt('라틴 스퀘어 순서를 입력하세요 (0~6):'), 10);
 
@@ -35,9 +36,11 @@ startButton.addEventListener('click', () => {
         setupTrials();
     }
 
-    currentTrialIndex = 0; // 트라이얼 인덱스 초기화
+    // 실험 진행
     overlay.style.display = 'none'; // 오버레이 숨기기
-    startNextTrial(); // 첫 트라이얼 시작
+    if (currentTrialIndex < trialQueue.length) {
+        startNextTrial(); // 트라이얼 진행
+    }
 });
 
 // 8개의 타겟과 딜레이를 조합하여 24번의 실험 준비
@@ -46,7 +49,6 @@ function setupTrials() {
     const repetitions = 3;
 
     trialQueue = []; // 트라이얼 큐 초기화
-
     for (let i = 0; i < repetitions; i++) {
         const shuffledTargets = shuffleArray([...targets]); // 타겟 순서를 랜덤으로 섞음
         const shuffledDelays = shuffleArray([...selectedOrder]); // 딜레이 순서를 랜덤으로 섞음
