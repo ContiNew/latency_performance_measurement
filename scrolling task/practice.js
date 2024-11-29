@@ -83,7 +83,7 @@ document.addEventListener("DOMContentLoaded", function () {
             if (scrollQueue.length > 0) {
                 const deltaY = scrollQueue.shift();
 
-                window.scrollBy({ top: deltaY, behavior: "auto" });
+                window.scrollBy({ top: deltaY, behavior: "instant" });
                 scrollCount++; // 스크롤 처리 횟수 증가
 
                 clearTimeout(scrollStopTimeout);
@@ -137,7 +137,7 @@ document.addEventListener("DOMContentLoaded", function () {
         const delay = responseDelays[delayIndex];
 
         setTimeout(() => {
-            scrollQueue.push(deltaY); // 지연 후 큐에 추가
+            scrollQueue.push(deltaY*2.5); // 지연 후 큐에 추가
             processScrollQueue(); // 큐 처리 시작
         }, delay);
     }

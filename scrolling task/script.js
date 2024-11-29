@@ -191,7 +191,7 @@ document.addEventListener("DOMContentLoaded", function () {
         const delay = responseDelays[delayIndex];
     
         setTimeout(() => {
-            scrollQueue.push(deltaY); // 지연 후 큐에 추가
+            scrollQueue.push(deltaY*2.5); // 지연 후 큐에 추가
             processScrollQueue(); // 큐 처리 시작
         }, delay);
     }
