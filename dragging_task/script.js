@@ -1,11 +1,11 @@
 document.addEventListener('DOMContentLoaded', () => {
     const latinSquare = [
-        [0, 200, 100, 400, 800, 600],
-        [20, 40, 0, 60, 100, 80],
-        [40, 60, 20, 80, 0, 100],
-        [60, 80, 40, 100, 20, 0],
-        [80, 100, 60, 0, 40, 20],
-        [100, 0, 80, 20, 60, 40],
+        [0, 50, 250, 100, 200, 150],
+        [50, 100, 0, 150, 250, 200],
+        [100, 150, 50, 200, 0, 250],
+        [150, 200, 100, 250, 50, 0],
+        [200, 250, 150, 0, 100, 50],
+        [250, 0, 200, 50, 150, 100],
     ];
 
     let isValidInput = false;
@@ -42,7 +42,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let currentTaskIndex = 0;
     const taskOrder = [];
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < 10; i++) {
         taskOrder.push(...allTargets.map(target => target.id));
     }
     shuffleArray(taskOrder);
